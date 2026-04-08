@@ -707,10 +707,13 @@ function logar(){
   <!-- RESUMO DOMÉSTICO DO FÁBIO -->
   <div id="resumo-dom-fabio" style="margin-bottom:16px"></div>
 
-  <div class="person-tabs">
-    <button class="ptab ativo-f" onclick="setPTab('fabio','diario',this)">📅 Gastos Diários</button>
-    <button class="ptab" onclick="setPTab('fabio','pessoal',this)">🧾 Gastos Pessoais</button>
+  <div class="person-tabs" style="flex-wrap:wrap">
+    <button class="ptab ativo-f" onclick="setPTab('fabio','diario',this)">📅 Diários</button>
+    <button class="ptab" onclick="setPTab('fabio','pessoal',this)">🧾 Pessoais</button>
+    <button class="ptab" onclick="setPTab('fabio','domestico',this)">🏠 Meu Doméstico</button>
   </div>
+  <!-- RESUMO FINANCEIRO FÁBIO -->
+  <div id="resumo-financeiro-fabio" style="margin-bottom:16px"></div>
   <div id="fabio-diario">
     <div class="form-box">
       <div class="form-tit"><span class="bar" style="background:var(--fabio)"></span>Novo gasto diário</div>
@@ -757,10 +760,13 @@ function logar(){
   <!-- RESUMO DOMÉSTICO DA CAMILA -->
   <div id="resumo-dom-camila" style="margin-bottom:16px"></div>
 
-  <div class="person-tabs">
-    <button class="ptab ativo-c" onclick="setPTab('camila','diario',this)">📅 Gastos Diários</button>
-    <button class="ptab" onclick="setPTab('camila','pessoal',this)">🧾 Gastos Pessoais</button>
+  <div class="person-tabs" style="flex-wrap:wrap">
+    <button class="ptab ativo-c" onclick="setPTab('camila','diario',this)">📅 Diários</button>
+    <button class="ptab" onclick="setPTab('camila','pessoal',this)">🧾 Pessoais</button>
+    <button class="ptab" onclick="setPTab('camila','domestico',this)">🏠 Meu Doméstico</button>
   </div>
+  <!-- RESUMO FINANCEIRO CAMILA -->
+  <div id="resumo-financeiro-camila" style="margin-bottom:16px"></div>
   <div id="camila-diario">
     <div class="form-box">
       <div class="form-tit"><span class="bar" style="background:var(--camila)"></span>Novo gasto diário</div>
@@ -1315,11 +1321,14 @@ function setEduTab(btn,panel){
   document.getElementById('epanel-'+panel).classList.add('ativo');
 }
 function setPTab(pessoa,aba,btn){
-  const sec=document.getElementById('sec-'+pessoa);
-  sec.querySelectorAll('.ptab').forEach(b=>{b.className='ptab';});
+  var sec=document.getElementById('sec-'+pessoa);
+  sec.querySelectorAll('.ptab').forEach(function(b){b.className='ptab';});
   btn.classList.add(pessoa==='fabio'?'ativo-f':'ativo-c');
   document.getElementById(pessoa+'-diario').style.display=aba==='diario'?'block':'none';
   document.getElementById(pessoa+'-pessoal').style.display=aba==='pessoal'?'block':'none';
+  var domEl=document.getElementById(pessoa+'-domestico');
+  if(domEl) domEl.style.display=aba==='domestico'?'block':'none';
+  if(aba==='domestico') renderPersonDom(pessoa);
 }
 function setMetaTab(btn,quem){
   document.querySelectorAll('.mtab').forEach(b=>{b.className='mtab';});
@@ -1468,6 +1477,147 @@ function renderContribSummary(cache) {
     '<div style="font-size:.7rem;color:var(--muted)">Total doméstico</div>' +
     '<div style="font-family:DM Mono,monospace;font-size:.95rem">' + fmt(totalDom) + '</div>' +
     '</div></div>';
+}
+
+// ══ RESUMO FINANCEIRO PESSOAL ══
+function renderResumoFinanceiro(pessoa, cache) {
+  var renda = pessoa==='fabio' ? _rF : _rC;
+  var diario = (cache['fabio_diario']||[]).concat();
+  var pessoal = (cache['fabio_pessoal']||[]).concat();
+  if(pessoa==='camila'){
+    diario = cache['camila_diario']||[];
+    pessoal = cache['camila_pessoal']||[];
+  }
+  var tDiario = diario.reduce(function(a,g){return a+g.valor;},0);
+  var tPessoal = pessoal.reduce(function(a,g){return a+g.valor;},0);
+
+  // Domestic part
+  var dom = cache['domestico']||[];
+  var domProp = dom.filter(function(g){return g.quem===pessoa;}).reduce(function(a,g){return a+g.valor;},0);
+  var domConj = dom.filter(function(g){return g.quem==='conjunto'||g.quem==='casal';}).reduce(function(a,g){return a+g.valor;},0);
+  var parteDom = domProp + domConj/2;
+
+  var totalGasto = tDiario + tPessoal + parteDom;
+  var saldo = renda - totalGasto;
+  var cor = pessoa==='fabio'?'var(--fabio)':'var(--camila)';
+  var saldoCor = saldo>=0?'var(--casal)':'var(--emerg)';
+
+  // Meta economia
+  var metaKey = 'nd2_meta_economia_'+pessoa;
+  var meta = parseFloat(localStorage.getItem(metaKey)||'0')||0;
+  var metaHtml = '';
+  if(meta>0){
+    var pct = Math.min(saldo/meta*100,100).toFixed(0);
+    metaHtml = '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:4px"><span>Meta de economia</span><span>'+fmt(meta)+'</span></div><div style="height:6px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:'+cor+';width:'+Math.max(0,pct)+'%"></div></div></div>';
+  }
+
+  var html = '<div style="background:linear-gradient(135deg,'+cor+'15,'+cor+'08);border:1px solid '+cor+'40;border-radius:14px;padding:16px 18px;margin-bottom:12px">'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px">'+
+    '<div class="mini-card"><div class="lbl">Renda</div><div class="val" style="color:var(--casal)">'+fmt(renda)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Diário+Pessoal</div><div class="val" style="color:'+cor+'">'+fmt(tDiario+tPessoal)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Parte Doméstico</div><div class="val" style="color:var(--warn)">'+fmt(parteDom)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Saldo Pessoal</div><div class="val" style="color:'+saldoCor+'">'+fmt(saldo)+'</div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;align-items:flex-end">'+
+    '<div style="flex:1"><label style="font-size:.68rem;color:var(--muted)">Meta de economia/mes (R$)</label><input type="number" id="meta-econ-'+pessoa+'" placeholder="Ex: 300" value="'+meta+'" style="margin-top:4px"/></div>'+
+    '<button class="btn-sm" onclick="salvarMetaEcon(this.dataset.p)" data-p="'+pessoa+'">Salvar</button>'+
+    '</div>'+metaHtml+'</div>';
+
+  var el = document.getElementById('resumo-financeiro-'+pessoa);
+  if(el) el.innerHTML = html;
+}
+
+function salvarMetaEcon(btn){
+  var pessoa = btn.dataset ? btn.dataset.p : btn;
+  var v = parseFloat(document.getElementById('meta-econ-'+pessoa).value)||0;
+  localStorage.setItem('nd2_meta_economia_'+pessoa, String(v));
+  fbSave('nd2_meta_economia_'+pessoa, String(v));
+  if(window._cache) renderResumoFinanceiro(pessoa, window._cache);
+}
+
+// ══ DOMÉSTICO POR PESSOA ══
+async function renderPersonDom(pessoa){
+  var cache = window._cache || {};
+  var dom = cache['domestico'] || [];
+  var cor = pessoa==='fabio'?'var(--fabio)':'var(--camila)';
+
+  // Filter items relevant to this person
+  var minhas = dom.filter(function(g){return g.quem===pessoa;});
+  var conjuntas = dom.filter(function(g){return g.quem==='conjunto'||g.quem==='casal';});
+
+  var tMinhas = minhas.reduce(function(a,g){return a+g.valor;},0);
+  var tConj = conjuntas.reduce(function(a,g){return a+g.valor;},0);
+  var total = tMinhas + tConj/2;
+
+  // Get paid status
+  var paidKey = 'nd2_dom_paid_'+pessoa+'_'+ano+'_'+mes;
+  var paid = JSON.parse(localStorage.getItem(paidKey)||'[]');
+
+  // Render summary
+  var resumoEl = document.getElementById(pessoa+'-dom-resumo');
+  if(resumoEl){
+    var pendentes = minhas.filter(function(g){return paid.indexOf(g.id)===-1;}).length +
+                    conjuntas.filter(function(g){return paid.indexOf(g.id)===-1;}).length;
+    resumoEl.innerHTML =
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'+
+      '<div class="mini-card"><div class="lbl">Contas minhas</div><div class="val" style="color:'+cor+'">'+fmt(tMinhas)+'</div></div>'+
+      '<div class="mini-card"><div class="lbl">½ Conjunto</div><div class="val" style="color:var(--warn)">'+fmt(tConj/2)+'</div></div>'+
+      '<div class="mini-card"><div class="lbl">Meu total</div><div class="val" style="color:'+cor+'">'+fmt(total)+'</div></div>'+
+      '</div>'+
+      '<div style="font-size:.78rem;color:'+(pendentes>0?'var(--emerg)':'var(--casal)')+'">'+
+      (pendentes>0?'⚠️ '+pendentes+' conta(s) pendente(s)':'✅ Todas as contas pagas!')+'</div>';
+  }
+
+  // Render list
+  var listEl = document.getElementById('lista-'+pessoa+'-dom');
+  if(!listEl) return;
+
+  var CAT_IC = {aluguel:'🏠',alimentacao:'🛒',internet:'📶',agua:'💧',luz:'⚡',gas:'🔥',limpeza:'🧹',outros:'📦',financiamento_casa:'🏦',financiamento_moto:'🏍️'};
+  var PAGS = {credito:'💳 Crédito',debito:'🏦 Débito',dinheiro:'💵 Dinheiro'};
+
+  function itemHtml(g, valor, tipo) {
+    var isPaid = paid.indexOf(g.id) !== -1;
+    var statusIcon = isPaid ? '✅' : '🕐';
+    var statusCor = isPaid ? 'var(--casal)' : 'var(--warn)';
+    return '<div class="item" style="'+(isPaid?'opacity:.7':'')+'">'+
+      '<div class="item-ic">'+(CAT_IC[g.cat]||'📦')+'</div>'+
+      '<div class="item-info">'+
+      '<div class="item-nome">'+g.desc+(tipo==='conjunto'?' <span class="tag tag-casal">÷2</span>':'')+'</div>'+
+      '<div class="item-meta">'+fmtD(g.data)+(g.obs?' · '+g.obs:'')+(g.dia?' · dia '+g.dia:'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<div class="item-val" style="color:'+cor+'">'+fmt(valor)+'</div>'+
+      '<button onclick="togglePago(this)" data-pessoa="'+pessoa+'" data-id="'+g.id+'" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer;font-size:.85rem;color:'+statusCor+'">'+statusIcon+'</button>'+
+      '</div></div>';
+  }
+
+  var html = '';
+  if(!minhas.length && !conjuntas.length){
+    html = '<div class="vazio">Nenhum gasto doméstico lançado ainda.<br>Vá em <strong>Doméstico</strong> e adicione os gastos do mês.</div>';
+  } else {
+    if(minhas.length){
+      html += '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:'+cor+';margin-bottom:6px;margin-top:4px">Minhas contas (100%)</div>';
+      minhas.forEach(function(g){ html += itemHtml(g, g.valor, 'minha'); });
+    }
+    if(conjuntas.length){
+      html += '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:12px 0 6px">Conjuntas (minha metade)</div>';
+      conjuntas.forEach(function(g){ html += itemHtml(g, g.valor/2, 'conjunto'); });
+    }
+  }
+  listEl.innerHTML = html;
+}
+
+async function togglePago(btn){
+  var pessoa = btn.dataset.pessoa;
+  var id = parseInt(btn.dataset.id);
+  var paidKey = 'nd2_dom_paid_'+pessoa+'_'+ano+'_'+mes;
+  var paid = JSON.parse(localStorage.getItem(paidKey)||'[]');
+  var idx = paid.indexOf(id);
+  if(idx === -1) paid.push(id);
+  else paid.splice(idx, 1);
+  localStorage.setItem(paidKey, JSON.stringify(paid));
+  fbSave(paidKey, JSON.stringify(paid));
+  await renderPersonDom(pessoa);
 }
 
 function renderReceitas(){
@@ -2014,6 +2164,8 @@ async function renderAll(){
   TIPOS.forEach(t=>renderLista(t,window._cache[t]));
   renderReceitas();
   renderContribSummary(window._cache);
+  renderResumoFinanceiro('fabio', window._cache);
+  renderResumoFinanceiro('camila', window._cache);
   await renderResumo(window._cache);
   await renderReservas();
   await renderInvResumo();
