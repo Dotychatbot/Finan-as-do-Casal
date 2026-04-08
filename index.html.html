@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nós Dois — Finanças do Casal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
+      authDomain: "nosdois-financas.firebaseapp.com",
+      projectId: "nosdois-financas",
+      storageBucket: "nosdois-financas.firebasestorage.app",
+      messagingSenderId: "141934571983",
+      appId: "1:141934571983:web:8288980a9eba25df6f22ba"
+    };
+    firebase.initializeApp(firebaseConfig);
+    window._db = firebase.firestore();
+    window._firebaseReady = true;
+    console.log('Firebase OK');
+  } catch(e) {
+    console.warn('Firebase erro:', e);
+    window._firebaseReady = true;
+  }
+</script>
+<meta name="theme-color" content="#2a7d4f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Nós Dois"/>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTsOzcyBEb2lzIOKAlCBGaW5hbsOnYXMiLCJzaG9ydF9uYW1lIjoiTsOzcyBEb2lzIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmYWY4ZjQiLCJ0aGVtZV9jb2xvciI6IiMyYTdkNGYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIHJ4PScyMCcgZmlsbD0nJTIzMmE3ZDRmJy8lM0UlM0N0ZXh0IHk9Jy43ZW0nIGZvbnQtc2l6ZT0nNjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIHg9JzUwJyUzRSVGMCU5RiVBNCU4RCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiYW55IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f4;--bg2:#f0ece3;--surface:#fff;--border:#e4dfd4;
+  --text:#1c1a17;--muted:#9a9080;
+  --fabio:#2d5be3;--camila:#d4538a;--casal:#2a7d4f;
+  --lazer:#e87c2d;--invest:#7c3aed;--emerg:#dc2626;--dogs:#a05c1e;
+  --warn:#d97706;--r:16px;--shadow:0 2px 16px rgba(0,0,0,.06);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#telaLogin{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#1c1a17 0%,#2d2820 50%,#1a1f1c 100%);}
+.login-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:48px 36px;width:min(420px,100%);text-align:center;backdrop-filter:blur(12px);}
+.login-hearts{font-size:2.8rem;margin-bottom:16px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.login-title{font-family:'Fraunces',serif;font-size:2rem;color:white;font-weight:300;margin-bottom:6px;font-style:italic;}
+.login-sub{color:rgba(255,255,255,.45);font-size:.85rem;margin-bottom:32px;}
+.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:white;font-family:'DM Mono',monospace;font-size:1.1rem;padding:14px 18px;text-align:center;letter-spacing:4px;outline:none;transition:border-color .2s;margin-bottom:14px;}
+.login-input:focus{border-color:rgba(255,255,255,.4);}
+.login-input::placeholder{letter-spacing:2px;font-size:.85rem;opacity:.4;}
+.login-btn{width:100%;background:white;color:#1c1a17;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;padding:14px;cursor:pointer;transition:opacity .2s;}
+.login-btn:hover{opacity:.88;}
+.login-err{color:#f87171;font-size:.8rem;margin-top:10px;min-height:20px;}
+
+/* NAV */
+#telaApp{display:none;}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.nav-brand{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:400;font-style:italic;display:flex;align-items:center;gap:8px;}
+.nav-brand span{font-style:normal;font-size:.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;}
+.mes-ctrl{display:flex;align-items:center;gap:8px;}
+.mes-ctrl button{background:var(--bg2);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;}
+.mes-ctrl button:hover{background:var(--border);}
+#labelMes{font-family:'DM Mono',monospace;font-size:.78rem;min-width:120px;text-align:center;}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 58px);}
+.sidebar{width:230px;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;overflow-y:auto;}
+@media(max-width:700px){.sidebar{display:none;}.mobile-nav{display:flex!important;}}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:10px;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{background:var(--bg2);color:var(--text);}
+.nav-item.ativo{color:var(--text);background:var(--bg2);}
+.nav-item .ni{font-size:.95rem;width:20px;}
+.nav-divider{height:1px;background:var(--border);margin:6px 4px;}
+.nav-section-label{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 12px 2px;}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:4px 0;z-index:100;justify-content:space-around;}
+.mob-btn{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:.52rem;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;padding:5px 6px;border-radius:8px;white-space:nowrap;min-width:48px;}
+.mob-btn.ativo{color:var(--casal);}
+.mob-btn .mi{font-size:1.15rem;}
+
+/* DRAWER MENU */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;}
+.drawer-overlay.aberto{display:block;}
+.drawer{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;z-index:151;padding:16px 12px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.drawer.aberto{transform:translateY(0);}
+.drawer-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px;}
+.drawer-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;padding:0 4px;}
+.drawer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.drawer-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;}
+.drawer-btn.ativo{border-color:var(--casal);background:#2a7d4f10;color:var(--casal);}
+.drawer-btn .di{font-size:1.3rem;}
+
+/* CONTENT */
+.content{flex:1;padding:20px 18px 90px;max-width:820px;}
+.secao{display:none;}
+.secao.ativa{display:block;}
+
+/* PAGE HEADER */
+.page-header{margin-bottom:20px;}
+.page-header h2{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:400;font-style:italic;margin-bottom:3px;}
+.page-header p{font-size:.81rem;color:var(--muted);}
+
+/* EDUCAÇÃO */
+.edu-hero{background:linear-gradient(135deg,#1c1a17 0%,#2d3a2e 100%);border-radius:var(--r);padding:32px 26px;color:white;margin-bottom:20px;position:relative;overflow:hidden;}
+.edu-hero::before{content:'💑';position:absolute;right:20px;top:16px;font-size:2.8rem;opacity:.25;}
+.edu-hero h1{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:300;font-style:italic;margin-bottom:7px;}
+.edu-hero p{font-size:.86rem;opacity:.7;line-height:1.65;max-width:480px;}
+.edu-subtabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.edu-stab{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .15s;}
+.edu-stab.ativo{background:var(--casal);color:white;border-color:var(--casal);}
+.edu-panel{display:none;}
+.edu-panel.ativo{display:block;}
+.edu-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:18px;}
+.edu-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 18px;}
+.edu-card .icon{font-size:1.7rem;margin-bottom:9px;}
+.edu-card h3{font-size:.88rem;font-weight:700;margin-bottom:7px;}
+.edu-card p{font-size:.79rem;color:var(--muted);line-height:1.6;}
+.dica-mes{background:#2a7d4f10;border:1px solid #2a7d4f30;border-radius:var(--r);padding:16px 18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;}
+.dica-mes .di{font-size:1.3rem;}
+.dica-mes h4{font-size:.81rem;font-weight:700;color:var(--casal);margin-bottom:3px;}
+.dica-mes p{font-size:.79rem;color:var(--muted);line-height:1.55;}
+
+/* PORQUÊ — espaço pessoal */
+.porque-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+@media(max-width:520px){.porque-wrap{grid-template-columns:1fr;}}
+.porque-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
+.porque-card h4{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.porque-card.f h4{color:var(--fabio);}
+.porque-card.c h4{color:var(--camila);}
+.porque-card.casal h4{color:var(--casal);}
+.porque-card textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);padding:10px 12px;resize:vertical;min-height:90px;outline:none;transition:border-color .2s;line-height:1.5;}
+.porque-card textarea:focus{border-color:var(--casal);}
+.btn-save-pq{margin-top:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;padding:6px 12px;cursor:pointer;color:var(--text);transition:background .15s;}
+.btn-save-pq:hover{background:var(--border);}
+
+/* RESUMO */
+.resumo-hero{background:linear-gradient(135deg,#1c1a17,#2d3a2e);border-radius:var(--r);padding:22px;color:white;margin-bottom:18px;}
+.frase-motivacional{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:300;font-style:italic;margin-bottom:14px;opacity:.9;line-height:1.4;}
+.resumo-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:480px){.resumo-nums{grid-template-columns:1fr 1fr;}}
+.rn{text-align:center;}
+.rn .rl{font-size:.62rem;opacity:.5;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.rn .rv{font-family:'DM Mono',monospace;font-size:.95rem;}
+.saude-bar-wrap{margin-bottom:18px;}
+.saude-bar-top{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-bottom:5px;}
+.saude-bar-track{height:9px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.saude-bar-fill{height:100%;border-radius:99px;background:var(--casal);transition:width .6s cubic-bezier(.4,0,.2,1);}
+.saude-bar-fill.warn{background:var(--warn);}
+.saude-bar-fill.danger{background:var(--emerg);}
+
+/* TERMÔMETRO */
+.termometro{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:18px;}
+.termometro h3{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;}
+.term-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bg2);font-size:.82rem;}
+.term-item:last-child{border:none;}
+.term-check{font-size:1rem;width:22px;text-align:center;}
+.term-label{flex:1;}
+.term-status{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:4px;}
+.term-ok{background:#2a7d4f15;color:var(--casal);}
+.term-warn{background:#d9770615;color:var(--warn);}
+.term-bad{background:#dc262615;color:var(--emerg);}
+
+/* RESERVAS GRID */
+.reservas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px;}
+.reserva-mini{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.reserva-mini .rlbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+.reserva-mini .rval{font-family:'DM Mono',monospace;font-size:1.1rem;margin-bottom:2px;}
+.reserva-mini .rsub{font-size:.7rem;color:var(--muted);}
+
+/* DIST */
+.dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+@media(max-width:480px){.dist-grid{grid-template-columns:1fr;}}
+.dist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.dist-card h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.dist-row{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;padding:5px 0;border-bottom:1px solid var(--bg2);}
+.dist-row:last-child{border:none;}
+.dist-row span:last-child{font-family:'DM Mono',monospace;font-size:.76rem;}
+
+/* SUGESTÕES */
+.sugestoes-wrap{margin-bottom:18px;}
+.sugestoes-wrap h3{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;}
+.sugestao-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;gap:11px;align-items:flex-start;}
+.sugestao-card .si{font-size:1.2rem;}
+.sugestao-card h4{font-size:.81rem;font-weight:700;margin-bottom:3px;}
+.sugestao-card p{font-size:.76rem;color:var(--muted);line-height:1.5;}
+.badge{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:5px;}
+.badge-invest{background:#7c3aed15;color:var(--invest);}
+.badge-lazer{background:#e87c2d15;color:var(--lazer);}
+.badge-reserve{background:#2a7d4f15;color:var(--casal);}
+.badge-warn{background:#dc262615;color:var(--emerg);}
+
+/* HISTORICO */
+.hist-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:18px;}
+.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+.hist-card .hm{font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:8px;}
+.hist-row{display:flex;justify-content:space-between;font-size:.72rem;padding:2px 0;}
+.hist-row span:last-child{font-family:'DM Mono',monospace;}
+
+/* RECEITAS */
+.renda-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+@media(max-width:500px){.renda-grid{grid-template-columns:1fr;}}
+.renda-card{border-radius:var(--r);padding:18px;border:1px solid;}
+.renda-card.fabio{background:#2d5be308;border-color:#2d5be330;}
+.renda-card.camila{background:#d4538a08;border-color:#d4538a30;}
+.renda-card .rc-nome{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.renda-card.fabio .rc-nome{color:var(--fabio);}
+.renda-card.camila .rc-nome{color:var(--camila);}
+.renda-card .rc-val{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:400;margin-bottom:10px;}
+.renda-card .rc-contrib{font-size:.74rem;color:var(--muted);margin-bottom:10px;}
+.renda-total{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.renda-total .lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;}
+.renda-total .vt{font-family:'DM Mono',monospace;font-size:1.25rem;color:var(--casal);}
+
+/* FORM */
+.form-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:18px;}
+.form-tit{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.form-tit .bar{width:4px;height:13px;border-radius:2px;display:inline-block;}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+@media(max-width:500px){.fields{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+label{display:block;font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:3px;letter-spacing:.3px;}
+input,select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.87rem;padding:8px 11px;outline:none;transition:border-color .2s;}
+input:focus,select:focus{border-color:var(--casal);}
+.btn-add{width:100%;padding:10px;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.87rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;color:white;}
+.btn-add:hover{opacity:.85;transform:translateY(-1px);}
+.btn-sm{background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.74rem;font-weight:600;padding:5px 11px;cursor:pointer;color:var(--text);transition:background .15s;}
+.btn-sm:hover{background:var(--border);}
+.btn-edit-renda{background:none;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.74rem;font-weight:600;padding:6px 11px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.btn-edit-renda:hover{border-color:var(--text);color:var(--text);}
+
+/* FILTROS */
+.filtros{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px;}
+.filtros button{background:var(--bg2);border:1.5px solid var(--border);color:var(--muted);border-radius:20px;padding:4px 11px;font-family:'DM Sans',sans-serif;font-size:.71rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.filtros button.ativo{color:white;border-color:transparent;}
+
+/* LISTA */
+.lista{display:flex;flex-direction:column;gap:7px;}
+.item{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:11px;animation:fadeUp .25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.item-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:var(--bg2);}
+.item-info{flex:1;min-width:0;}
+.item-nome{font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-size:.67rem;color:var(--muted);margin-top:2px;}
+.item-val{font-family:'DM Mono',monospace;font-size:.9rem;white-space:nowrap;font-weight:500;}
+.item-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 5px;border-radius:6px;font-size:.8rem;transition:color .15s,background .15s;}
+.item-del:hover{color:var(--emerg);background:#dc262618;}
+.vazio{text-align:center;color:var(--muted);padding:28px 0;font-size:.84rem;}
+.tag{display:inline-block;font-size:.61rem;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:4px;vertical-align:middle;}
+.tag-f{background:#2d5be315;color:var(--fabio);}
+.tag-c{background:#d4538a15;color:var(--camila);}
+.tag-casal{background:#2a7d4f15;color:var(--casal);}
+
+/* PERSON TABS */
+.person-tabs{display:flex;gap:7px;margin-bottom:16px;}
+.ptab{flex:1;padding:9px;border-radius:10px;border:2px solid var(--border);background:none;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--muted);text-align:center;}
+.ptab.ativo-f{border-color:var(--fabio);background:#2d5be310;color:var(--fabio);}
+.ptab.ativo-c{border-color:var(--camila);background:#d4538a10;color:var(--camila);}
+
+/* METAS */
+.metas-tabs{display:flex;gap:7px;margin-bottom:16px;}
+.mtab{flex:1;padding:8px;border-radius:10px;border:2px solid var(--border);background:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--muted);text-align:center;}
+.mtab.ativo-f{border-color:var(--fabio);background:#2d5be310;color:var(--fabio);}
+.mtab.ativo-c{border-color:var(--camila);background:#d4538a10;color:var(--camila);}
+.mtab.ativo-casal{border-color:var(--casal);background:#2a7d4f10;color:var(--casal);}
+.meta-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
+.meta-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.meta-nome{font-weight:700;font-size:.88rem;}
+.meta-track{height:7px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.meta-fill{height:100%;border-radius:99px;transition:width .5s;}
+.meta-fill-f{background:var(--fabio);}
+.meta-fill-c{background:var(--camila);}
+.meta-fill-casal{background:var(--casal);}
+.meta-pct{font-size:.71rem;color:var(--muted);margin-top:4px;}
+
+/* RESERVAS SECTION */
+.reserva-box{border-radius:var(--r);padding:18px;margin-bottom:16px;border:1px solid;}
+.reserva-box.emerg{background:#dc262608;border-color:#dc262630;}
+.reserva-box.dogs{background:#a05c1e08;border-color:#a05c1e30;}
+.reserva-box.lazer{background:#e87c2d08;border-color:#e87c2d30;}
+.reserva-box.invest{background:#7c3aed08;border-color:#7c3aed30;}
+
+/* COLORS */
+.sec-fabio input:focus,.sec-fabio select:focus{border-color:var(--fabio);}
+.sec-fabio .btn-add{background:var(--fabio);}
+.sec-fabio .filtros button.ativo{background:var(--fabio);}
+.sec-camila input:focus,.sec-camila select:focus{border-color:var(--camila);}
+.sec-camila .btn-add{background:var(--camila);}
+.sec-camila .filtros button.ativo{background:var(--camila);}
+.sec-casal .btn-add{background:var(--casal);}
+.sec-casal .filtros button.ativo{background:var(--casal);}
+.item-val.fabio{color:var(--fabio);}
+.item-val.camila{color:var(--camila);}
+.item-val.casal{color:var(--casal);}
+.item-val.invest{color:var(--invest);}
+.item-val.lazer{color:var(--lazer);}
+.item-val.emerg{color:var(--emerg);}
+.item-val.dogs{color:var(--dogs);}
+hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+/* RELATÓRIO */
+.rel-hero{background:linear-gradient(135deg,#1c1a17,#2d3a2e);border-radius:var(--r);padding:24px;color:white;margin-bottom:18px;}
+.rel-hero h2{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:300;font-style:italic;margin-bottom:4px;}
+.rel-hero p{font-size:.8rem;opacity:.6;}
+.rel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px;}
+.rel-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.rel-card .rl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+.rel-card .rv{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;}
+.rel-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.rel-section h3{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.rel-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg2);font-size:.83rem;}
+.rel-row:last-child{border:none;}
+.rel-row span:last-child{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;}
+.rel-bar-wrap{margin-bottom:8px;}
+.rel-bar-label{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px;}
+.rel-bar-track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.rel-bar-fill{height:100%;border-radius:99px;transition:width .5s;}
+.btn-exportar{width:100%;padding:12px;background:var(--casal);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s;}
+.btn-exportar:hover{opacity:.85;}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+
+/* VOZ */
+.btn-voz{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all .2s;flex-shrink:0;}
+.btn-voz.idle{background:var(--bg2);color:var(--muted);}
+.btn-voz.ouvindo{background:var(--emerg);color:white;animation:vozPulse 1s infinite;}
+.btn-voz.processando{background:var(--warn);color:white;}
+@keyframes vozPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+.voz-status{font-size:.75rem;color:var(--muted);margin-top:6px;text-align:center;min-height:18px;}
+.voz-wrap{display:flex;flex-direction:column;align-items:center;padding:12px;background:var(--bg);border:1.5px dashed var(--border);border-radius:12px;margin-bottom:12px;transition:border-color .2s;}
+.voz-wrap.ouvindo{border-color:var(--emerg);background:#dc262605;}
+
+/* MURAL */
+.mural-nota{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:fadeUp .25s ease;}
+.mural-nota.nao-lida{border-left:4px solid var(--casal);background:#2a7d4f05;}
+.mural-nota.fabio-nota{border-left:4px solid var(--fabio);}
+.mural-nota.camila-nota{border-left:4px solid var(--camila);}
+.mural-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.mural-autor{font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:6px;}
+.mural-hora{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+.mural-msg{font-size:.86rem;line-height:1.55;color:var(--text);}
+.mural-lida{font-size:.65rem;color:var(--casal);font-weight:700;margin-top:5px;}
+.rapidas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.rapida-btn{background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;color:var(--text);padding:6px 12px;cursor:pointer;transition:all .15s;}
+.rapida-btn:hover{border-color:var(--casal);color:var(--casal);}
+.mural-badge{background:var(--emerg);color:white;border-radius:99px;font-size:.6rem;font-weight:700;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+
+/* LOGOUT */
+.btn-logout{background:none;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;color:var(--muted);padding:6px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.btn-logout:hover{border-color:var(--emerg);color:var(--emerg);}
+
+/* CATEGORIAS PERSONALIZADAS */
+.cat-add-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px dashed var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;color:var(--muted);padding:5px 10px;cursor:pointer;transition:all .15s;margin-top:4px;}
+.cat-add-btn:hover{border-color:var(--casal);color:var(--casal);}
+.cat-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;font-size:.72rem;font-weight:600;padding:3px 8px;margin:2px;}
+.cat-chip button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;padding:0 1px;line-height:1;}
+.cats-gerenciar{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:8px;}
+.cats-gerenciar h5{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+
+/* CONTAS A VENCER */
+.conta-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .2s;}
+.conta-card.vencendo{border-color:var(--warn);background:#d9770608;}
+.conta-card.vencida{border-color:var(--emerg);background:#dc262608;}
+.conta-card.ok{border-color:#2a7d4f40;background:#2a7d4f05;}
+.conta-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.conta-ic.vencendo{background:#d9770620;}
+.conta-ic.vencida{background:#dc262620;}
+.conta-ic.ok{background:#2a7d4f20;}
+.conta-info{flex:1;min-width:0;}
+.conta-nome{font-weight:700;font-size:.88rem;}
+.conta-meta{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.conta-right{text-align:right;flex-shrink:0;}
+.conta-valor{font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;}
+.conta-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:4px;display:block;margin-top:3px;}
+.badge-vencendo{background:#d9770618;color:var(--warn);}
+.badge-vencida{background:#dc262618;color:var(--emerg);}
+.badge-ok{background:#2a7d4f18;color:var(--casal);}
+
+/* ALERTA VENCIMENTO */
+.alerta-banner{background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;animation:fadeUp .3s ease;}
+.alerta-banner .ab-icon{font-size:1.5rem;}
+.alerta-banner h4{font-size:.88rem;font-weight:700;margin-bottom:2px;}
+.alerta-banner p{font-size:.76rem;opacity:.85;}
+
+/* NOTIF BANNER */
+.notif-banner{background:linear-gradient(135deg,#2a7d4f,#1b5e38);color:white;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:opacity .2s;}
+.notif-banner:hover{opacity:.9;}
+.notif-banner .nb-icon{font-size:1.4rem;}
+.notif-banner h4{font-size:.85rem;font-weight:700;margin-bottom:2px;}
+.notif-banner p{font-size:.74rem;opacity:.8;}
+.notif-banner .nb-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.overlay.aberto{display:flex;}
+.modal{background:white;border-radius:var(--r);padding:26px 22px;width:min(420px,100%);box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+.modal h2{font-size:.98rem;font-weight:700;margin-bottom:14px;}
+.modal-btns{display:flex;gap:8px;margin-top:12px;}
+.btn-confirm{flex:1;padding:10px;background:var(--casal);color:white;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;}
+.btn-cancel{padding:10px 14px;background:var(--bg2);border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.86rem;cursor:pointer;}
+.modal input,.modal select{margin-top:7px;}
+.mini-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+.mini-card .lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+.mini-card .val{font-family:'DM Mono',monospace;font-size:1rem;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="telaLogin">
+  <div class="login-box">
+    <div class="login-hearts">💑</div>
+    <div class="login-title">Nós Dois</div>
+    <div class="login-sub">Finanças do casal — acesso exclusivo</div>
+    <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30"/>
+    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="telaApp">
+<nav>
+  <div class="nav-brand">Nós Dois <span>finanças</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="mes-ctrl">
+    <button onclick="mudarMes(-1)">‹</button>
+    <span id="labelMes"></span>
+      <button onclick="mudarMes(1)">›</button>
+    </div>
+    <button class="btn-logout" onclick="confirmarSair()">🚪 Sair</button>
+  </div>
+</nav>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="nav-section-label">Início</div>
+  <button class="nav-item ativo" data-sec="educacao" onclick="setSecao(this)"><span class="ni">💡</span>Educação</button>
+  <button class="nav-item" data-sec="resumo" onclick="setSecao(this)"><span class="ni">📊</span>Resumo Geral</button>
+  <button class="nav-item" data-sec="receitas" onclick="setSecao(this)"><span class="ni">💰</span>Receitas</button>
+  <button class="nav-item" data-sec="fontes" onclick="setSecao(this)"><span class="ni">💵</span>Fontes de Renda</button>
+  <button class="nav-item" data-sec="recorrentes" onclick="setSecao(this)"><span class="ni">🔄</span>Gastos Recorrentes</button>
+  <div class="nav-divider"></div>
+  <div class="nav-section-label">Individual</div>
+  <button class="nav-item" data-sec="fabio" onclick="setSecao(this)"><span class="ni">👤</span>Fábio Padote</button>
+  <button class="nav-item" data-sec="camila" onclick="setSecao(this)"><span class="ni">👩</span>Camila Pâmela</button>
+  <div class="nav-divider"></div>
+  <div class="nav-section-label">Casal</div>
+  <button class="nav-item" data-sec="domestico" onclick="setSecao(this)"><span class="ni">🏠</span>Doméstico</button>
+  <button class="nav-item" data-sec="reservas" onclick="setSecao(this)"><span class="ni">🛡️</span>Reservas</button>
+  <button class="nav-item" data-sec="investimentos" onclick="setSecao(this)"><span class="ni">📈</span>Investimentos</button>
+  <button class="nav-item" data-sec="contas" onclick="setSecao(this)"><span class="ni">📅</span>Contas a Vencer</button>
+  <button class="nav-item" data-sec="relatorio" onclick="setSecao(this)"><span class="ni">📄</span>Relatório Mensal</button>
+  <button class="nav-item" data-sec="mural" onclick="setSecao(this)"><span class="ni">📝</span>Mural do Casal<span class="mural-badge" id="muralBadge" style="display:none">!</span></button>
+  <button class="nav-item" data-sec="metas" onclick="setSecao(this)"><span class="ni">🎯</span>Metas & Sonhos</button>
+  <div style="margin-top:auto;padding-top:16px">
+    <div class="nav-divider"></div>
+    <button class="nav-item" onclick="confirmarSair()" style="color:var(--emerg)"><span class="ni">🚪</span>Sair / Deslogar</button>
+  </div>
+</aside>
+
+<div class="content">
+
+<!-- ══ EDUCAÇÃO ══ -->
+<section class="secao ativa" id="sec-educacao">
+  <div class="edu-hero">
+    <h1>Crescer juntos começa aqui</h1>
+    <p>Este app foi criado para vocês dois construírem uma vida financeira saudável, transparente e próspera — não para controlar, mas para crescer juntos como casal.</p>
+  </div>
+  <div class="edu-subtabs">
+    <button class="edu-stab ativo" onclick="setEduTab(this,'nos')">💑 Nós dois</button>
+    <button class="edu-stab" onclick="setEduTab(this,'eu-fabio')">👤 Eu — Fábio</button>
+    <button class="edu-stab" onclick="setEduTab(this,'eu-camila')">👩 Eu — Camila</button>
+    <button class="edu-stab" onclick="setEduTab(this,'porque')">✍️ Nossos Porquês</button>
+  </div>
+
+  <!-- NÓS -->
+  <div class="edu-panel ativo" id="epanel-nos">
+    <div class="edu-cards">
+      <div class="edu-card"><div class="icon">🤝</div><h3>Por que juntar as finanças?</h3><p>Casais que conversam sobre dinheiro regularmente têm muito menos conflitos financeiros. Transparência cria confiança, e confiança fortalece o relacionamento.</p></div>
+      <div class="edu-card"><div class="icon">🏦</div><h3>A força do fundo doméstico</h3><p>Ter um fundo conjunto para as despesas da casa — mesmo mantendo contas pessoais — garante que as contas sejam pagas sem atrito, desgaste ou cobranças entre vocês.</p></div>
+      <div class="edu-card"><div class="icon">📈</div><h3>Investir juntos multiplica</h3><p>Dois investindo com consistência chegam muito mais rápido a objetivos grandes: casa própria, viagem dos sonhos, aposentadoria tranquila. O tempo faz o trabalho.</p></div>
+      <div class="edu-card"><div class="icon">👁️</div><h3>Saber para onde vai o dinheiro</h3><p>Não é sobre desconfiança — é sobre consciência. Quando os dois sabem para onde o dinheiro vai, as decisões ficam mais inteligentes e os objetivos mais claros.</p></div>
+      <div class="edu-card"><div class="icon">🛡️</div><h3>Reserva de emergência primeiro</h3><p>Antes de qualquer investimento, o casal precisa de 3 a 6 meses de despesas guardados. Esse fundo protege vocês de qualquer imprevisto sem precisar se endividar.</p></div>
+      <div class="edu-card"><div class="icon">🐾</div><h3>Reserva para os dogs</h3><p>Animais de estimação têm custos imprevisíveis — veterinário de emergência, remédios, cirurgias. Ter uma reserva exclusiva para eles é um ato de amor e de planejamento.</p></div>
+    </div>
+    <div class="dica-mes"><div class="di">💡</div><div><h4>Dica do mês</h4><p>Marquem um dia fixo todo mês — pode ser o dia do pagamento — para sentarem juntos, abrir este app, olhar o resumo e ajustar o planejamento. Esse hábito simples vale mais que qualquer planilha.</p></div></div>
+  </div>
+
+  <!-- EU FÁBIO -->
+  <div class="edu-panel" id="epanel-eu-fabio">
+    <div class="edu-cards">
+      <div class="edu-card"><div class="icon">💪</div><h3>Sua identidade financeira</h3><p>Mesmo dentro de um casal, você tem seus próprios objetivos, sonhos e responsabilidades. Manter clareza sobre suas finanças individuais te torna um parceiro mais forte e mais seguro.</p></div>
+      <div class="edu-card"><div class="icon">🏍️</div><h3>Financiamentos e dívidas</h3><p>Financiamentos não são vilões — são ferramentas. O importante é saber exatamente o quanto compromete da sua renda todo mês e planejar a quitação para ganhar liberdade financeira.</p></div>
+      <div class="edu-card"><div class="icon">📚</div><h3>Educação como investimento</h3><p>Cada curso, cada habilidade aprendida é um aumento de renda potencial no futuro. Investir em você mesmo é o investimento com maior retorno que existe.</p></div>
+      <div class="edu-card"><div class="icon">🎯</div><h3>Seus sonhos individuais</h3><p>Ter objetivos pessoais além dos objetivos do casal é saudável e importante. Registre seus sonhos aqui — e construa um caminho concreto para eles.</p></div>
+    </div>
+    <div class="dica-mes"><div class="di">👤</div><div><h4>Reflexão para o Fábio</h4><p>Quanto da sua renda sobra após suas despesas pessoais e sua contribuição doméstica? Esse é seu espaço de liberdade — use parte dele para investir no seu futuro individual também.</p></div></div>
+  </div>
+
+  <!-- EU CAMILA -->
+  <div class="edu-panel" id="epanel-eu-camila">
+    <div class="edu-cards">
+      <div class="edu-card"><div class="icon">💜</div><h3>Sua autonomia financeira</h3><p>Independência financeira dentro do relacionamento é um pilar de um casal saudável. Saber que você tem seus próprios recursos te dá segurança e liberdade para escolhas.</p></div>
+      <div class="edu-card"><div class="icon">📱</div><h3>Assinaturas e gastos recorrentes</h3><p>Gastos recorrentes são silenciosos — chegam todo mês sem avisar. Vale listar todas as assinaturas periodicamente e avaliar quais realmente valem o custo.</p></div>
+      <div class="edu-card"><div class="icon">💊</div><h3>Saúde é prioridade</h3><p>Gastos com saúde e bem-estar não devem ser vistos como supérfluos. Cuidar de você é cuidar do casal. Reserve sempre um espaço no orçamento para isso.</p></div>
+      <div class="edu-card"><div class="icon">🎯</div><h3>Seus sonhos individuais</h3><p>Quais são os objetivos que são só seus? Registre aqui suas metas pessoais — elas merecem atenção e planejamento tanto quanto os objetivos do casal.</p></div>
+    </div>
+    <div class="dica-mes"><div class="di">👩</div><div><h4>Reflexão para a Camila</h4><p>Quanto da sua renda sobra após suas despesas pessoais e contribuição doméstica? Essa sobra é sua — invista parte dela nos seus sonhos individuais. Você merece crescer também.</p></div></div>
+  </div>
+
+  <!-- NOSSOS PORQUÊS -->
+  <div class="edu-panel" id="epanel-porque">
+    <div class="dica-mes" style="margin-bottom:16px"><div class="di">✍️</div><div><h4>O poder do "porquê"</h4><p>Quando o planejamento fica difícil e a vontade de gastar bate, lembrar do seu "porquê" é o que mantém vocês no caminho. Escreva aqui — com honestidade e carinho.</p></div></div>
+    <div class="porque-wrap">
+      <div class="porque-card f">
+        <h4>👤 Porquê do Fábio</h4>
+        <textarea id="pq-fabio" placeholder="Por que você quer organizar as finanças? O que você está construindo? Escreva aqui..."></textarea>
+        <button class="btn-save-pq" onclick="salvarPorque('fabio')">💾 Salvar</button>
+      </div>
+      <div class="porque-card c">
+        <h4>👩 Porquê da Camila</h4>
+        <textarea id="pq-camila" placeholder="Por que você quer organizar as finanças? O que você está construindo? Escreva aqui..."></textarea>
+        <button class="btn-save-pq" onclick="salvarPorque('camila')">💾 Salvar</button>
+      </div>
+    </div>
+    <div class="porque-card casal" style="margin-top:0">
+      <h4>💑 Porquê do Casal</h4>
+      <textarea id="pq-casal" placeholder="O que vocês dois estão construindo juntos? Qual é o sonho grande do casal? O que esse controle financeiro vai permitir que vocês vivam?"></textarea>
+      <button class="btn-save-pq" onclick="salvarPorque('casal')">💾 Salvar</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESUMO ══ -->
+<section class="secao" id="sec-resumo">
+  <div class="resumo-hero">
+    <div class="frase-motivacional" id="fraseMotiv">Carregando...</div>
+    <div class="resumo-nums">
+      <div class="rn"><div class="rl">Renda Total</div><div class="rv" id="rn-renda">—</div></div>
+      <div class="rn"><div class="rl">Total Gasto</div><div class="rv" id="rn-gasto">—</div></div>
+      <div class="rn"><div class="rl">Saldo Livre</div><div class="rv" id="rn-saldo">—</div></div>
+      <div class="rn"><div class="rl">Fábio</div><div class="rv" id="rn-pf">—</div></div>
+      <div class="rn"><div class="rl">Camila</div><div class="rv" id="rn-pc">—</div></div>
+      <div class="rn"><div class="rl">Investido</div><div class="rv" id="rn-inv">—</div></div>
+    </div>
+  </div>
+  <div class="saude-bar-wrap">
+    <div class="saude-bar-top"><span>Comprometido da renda</span><span id="saudePct">0%</span></div>
+    <div class="saude-bar-track"><div class="saude-bar-fill" id="saudeBar" style="width:0%"></div></div>
+  </div>
+
+  <!-- TERMÔMETRO -->
+  <div class="termometro">
+    <h3>🌡️ Termômetro Financeiro</h3>
+    <div id="termometroEl"></div>
+  </div>
+
+  <!-- RESERVAS MINI -->
+  <h3 style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">🛡️ Saldo das Reservas</h3>
+  <div class="reservas-grid" id="reservasGridEl"></div>
+
+  <div class="dist-grid">
+    <div class="dist-card"><h4>🏠 Doméstico por categoria</h4><div id="distDom"></div></div>
+    <div class="dist-card"><h4>👤 Individual por pessoa</h4><div id="distPes"></div></div>
+  </div>
+
+  <!-- BALANÇO DO CASAL -->
+  <div class="termometro" style="margin-bottom:18px">
+    <h3>⚖️ Balanço do Casal</h3>
+    <p style="font-size:.76rem;color:var(--muted);margin-bottom:12px">Gastos conjuntos divididos ao meio — quanto cada um deve arcar no total este mês</p>
+    <div id="balancoCasalEl"></div>
+  </div>
+
+  <div class="sugestoes-wrap">
+    <h3>💡 Sugestões para o saldo de vocês</h3>
+    <div id="sugestoesEl"></div>
+  </div>
+
+  <hr class="sep"/>
+  <h3 style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">📋 Todos os lançamentos do mês</h3>
+  <div class="lista" id="listaGeral"></div>
+</section>
+
+<!-- ══ FONTES DE RENDA ══ -->
+<section class="secao" id="sec-fontes">
+  <div class="page-header"><h2>Fontes de Renda</h2><p>De onde vem o dinheiro de cada um</p></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+    <div>
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--fabio);margin-bottom:10px">👤 Fábio Padote</div>
+      <div class="form-box" style="border-color:#2d5be330">
+        <div class="form-tit"><span class="bar" style="background:var(--fabio)"></span>Nova fonte</div>
+        <div class="fields">
+          <div class="full"><label>Descrição</label><input type="text" id="frf-desc" placeholder="Ex: CLT, Bico moto…"/></div>
+          <div><label>Valor (R$)</label><input type="number" id="frf-val" placeholder="0,00" min="0" step="0.01"/></div>
+          <div><label>Tipo</label><select id="frf-tipo"><option value="fixa">🔒 Fixa</option><option value="variavel">📈 Variável</option></select></div>
+          <div class="full"><button class="btn-add" style="background:var(--fabio)" onclick="addFonte('fabio')">+ Adicionar</button></div>
+        </div>
+      </div>
+      <div id="lista-fontes-fabio"></div>
+      <div class="mini-card" style="margin-top:8px"><div class="lbl">Total Fábio</div><div class="val" style="color:var(--fabio)" id="total-fontes-fabio">R$ 0,00</div></div>
+    </div>
+    <div>
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--camila);margin-bottom:10px">👩 Camila Pâmela</div>
+      <div class="form-box" style="border-color:#d4538a30">
+        <div class="form-tit"><span class="bar" style="background:var(--camila)"></span>Nova fonte</div>
+        <div class="fields">
+          <div class="full"><label>Descrição</label><input type="text" id="frc-desc" placeholder="Ex: CLT, Freelance…"/></div>
+          <div><label>Valor (R$)</label><input type="number" id="frc-val" placeholder="0,00" min="0" step="0.01"/></div>
+          <div><label>Tipo</label><select id="frc-tipo"><option value="fixa">🔒 Fixa</option><option value="variavel">📈 Variável</option></select></div>
+          <div class="full"><button class="btn-add" style="background:var(--camila)" onclick="addFonte('camila')">+ Adicionar</button></div>
+        </div>
+      </div>
+      <div id="lista-fontes-camila"></div>
+      <div class="mini-card" style="margin-top:8px"><div class="lbl">Total Camila</div><div class="val" style="color:var(--camila)" id="total-fontes-camila">R$ 0,00</div></div>
+    </div>
+  </div>
+  <div class="form-box" style="background:#2a7d4f08;border-color:#2a7d4f30">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda Total do Casal</div><div style="font-family:'DM Mono',monospace;font-size:1.4rem;color:var(--casal)" id="total-fontes-casal">R$ 0,00</div></div>
+      <div id="fontes-composicao" style="font-size:.76rem;color:var(--muted)"></div>
+    </div>
+    <div id="fontes-meta-extra" style="margin-top:12px"></div>
+  </div>
+  <div class="dica-mes"><div class="di">💡</div><div><h4>Renda fixa vs variável</h4><p>A renda fixa é garantida todo mês — seu CLT, aluguel recebido. A variável vem de bicos, freelances. Planejem os gastos fixos sempre com base na renda fixa — a variável é bônus para investir ou guardar.</p></div></div>
+</section>
+
+<!-- ══ GASTOS RECORRENTES ══ -->
+<section class="secao" id="sec-recorrentes">
+  <div class="page-header"><h2>Gastos Recorrentes</h2><p>Cadastre uma vez — aparece automaticamente todo mês</p></div>
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--warn)"></span>Cadastrar gasto recorrente</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="rec-desc" placeholder="Ex: Financiamento moto, Spotify…"/></div>
+      <div><label>Valor (R$)</label><input type="number" id="rec-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Categoria</label>
+        <select id="rec-cat">
+          <option value="financiamento">🏍️ Financiamento</option>
+          <option value="financiamento_casa">🏠 Financ. Casa</option>
+          <option value="assinatura">📱 Assinatura</option>
+          <option value="internet">📶 Internet</option>
+          <option value="agua">💧 Água</option>
+          <option value="luz">⚡ Luz</option>
+          <option value="gas">🔥 Gás</option>
+          <option value="aluguel">🏡 Aluguel</option>
+          <option value="saude">💊 Saúde/Plano</option>
+          <option value="educacao">📚 Educação</option>
+          <option value="outros">💼 Outros</option>
+        </select>
+      </div>
+      <div><label>Seção</label>
+        <select id="rec-secao">
+          <option value="domestico">🏠 Doméstico</option>
+          <option value="fabio_pessoal">👤 Pessoal Fábio</option>
+          <option value="camila_pessoal">👩 Pessoal Camila</option>
+        </select>
+      </div>
+      <div><label>Início (mês/ano)</label><input type="month" id="rec-inicio"/></div>
+      <div><label>Duração (meses) — 0 = sem fim</label><input type="number" id="rec-meses" placeholder="Ex: 48" min="0"/></div>
+      <div><label>Dia de vencimento</label><input type="number" id="rec-dia" placeholder="Ex: 10" min="1" max="31"/></div>
+      <div><label>Obs (opcional)</label><input type="text" id="rec-obs" placeholder="Parcela inicial, contrato…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--warn)" onclick="addRecorrente()">🔄 Cadastrar Recorrente</button></div>
+    </div>
+  </div>
+  <div id="compromissos-fixos" style="margin-bottom:16px"></div>
+  <h3 style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">📋 Gastos cadastrados</h3>
+  <div id="lista-recorrentes"></div>
+</section>
+
+<!-- ══ RECEITAS ══ -->
+<section class="secao" id="sec-receitas">
+  <div class="page-header"><h2>Receitas do mês</h2><p>Renda individual e contribuição para o doméstico</p></div>
+  <div class="renda-grid">
+    <div class="renda-card fabio">
+      <div class="rc-nome">Fábio Padote</div>
+      <div class="rc-val" id="rendaFabioEl">R$ 0,00</div>
+      <div class="rc-contrib" id="contribFabioEl">Contribuição doméstica: R$ 0,00</div>
+      <button class="btn-edit-renda" onclick="abrirModalRenda('fabio')">✏️ Editar</button>
+    </div>
+    <div class="renda-card camila">
+      <div class="rc-nome">Camila Pâmela</div>
+      <div class="rc-val" id="rendaCamilaEl">R$ 0,00</div>
+      <div class="rc-contrib" id="contribCamilaEl">Contribuição doméstica: R$ 0,00</div>
+      <button class="btn-edit-renda" onclick="abrirModalRenda('camila')">✏️ Editar</button>
+    </div>
+  </div>
+  <div class="renda-total">
+    <div><div class="lbl">Renda total do casal</div><div class="vt" id="rendaTotalEl">R$ 0,00</div></div>
+    <div id="contribInfoEl" style="font-size:.78rem;color:var(--muted)"></div>
+  </div>
+  <div class="dica-mes"><div class="di">⚖️</div><div><h4>Divisão proporcional justa</h4><p>Uma boa prática é cada um contribuir proporcionalmente à sua renda. Se Fábio ganha 60% da renda total, contribui com 60% das despesas domésticas. Justo para os dois, independente do salário.</p></div></div>
+</section>
+
+<!-- ══ FÁBIO ══ -->
+<section class="secao sec-fabio" id="sec-fabio">
+  <div class="page-header"><h2>Área do Fábio Padote</h2><p>Gastos diários e pessoais — individual</p></div>
+  <div class="person-tabs">
+    <button class="ptab ativo-f" onclick="setPTab('fabio','diario',this)">📅 Gastos Diários</button>
+    <button class="ptab" onclick="setPTab('fabio','pessoal',this)">🧾 Gastos Pessoais</button>
+  </div>
+  <div id="fabio-diario">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--fabio)"></span>Novo gasto diário</div>
+      <div class="voz-wrap" id="voz-wrap-fd">
+        <button class="btn-voz idle" id="btn-voz-fd" onclick="toggleVoz('fd')" title="Falar gasto">🎤</button>
+        <div class="voz-status" id="voz-status-fd">Toque no microfone e fale o gasto</div>
+      </div>
+      <div class="fields">
+        <div><label>Descrição</label><input type="text" id="fd-desc" placeholder="Ex: Gasolina, almoço…"/></div>
+        <div><label>Valor (R$)</label><input type="number" id="fd-val" placeholder="0,00" min="0" step="0.01"/></div>
+        <div><label>Categoria</label><select id="fd-cat"><option value="alimentacao">🍔 Alimentação</option><option value="transporte">⛽ Transporte</option><option value="compras">🛍️ Compras</option><option value="saude">💊 Saúde</option><option value="outros">💼 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('fd-cat','fabio_diario')">＋ Nova categoria</button></div>
+        <div><label>Pagamento</label><select id="fd-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
+        <div><label>Data</label><input type="date" id="fd-data"/></div>
+        <div><label>Obs (opcional)</label><input type="text" id="fd-obs" placeholder="Detalhe…"/></div>
+        <div class="full"><button class="btn-add" onclick="add('fabio_diario')">+ Adicionar</button></div>
+      </div>
+    </div>
+    <div class="filtros" id="filt-fd"><button class="ativo" data-f="todos">Todos</button><button data-f="alimentacao">🍔 Alimentação</button><button data-f="transporte">⛽ Transporte</button><button data-f="compras">🛍️ Compras</button><button data-f="saude">💊 Saúde</button><button data-f="outros">💼 Outros</button></div>
+    <div class="lista" id="lista-fd"></div>
+  </div>
+  <div id="fabio-pessoal" style="display:none">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--fabio)"></span>Novo gasto pessoal</div>
+      <div class="fields">
+        <div><label>Descrição</label><input type="text" id="fp-desc" placeholder="Ex: Financiamento moto…"/></div>
+        <div><label>Valor (R$)</label><input type="number" id="fp-val" placeholder="0,00" min="0" step="0.01"/></div>
+        <div><label>Categoria</label><select id="fp-cat"><option value="financiamento">🏍️ Financiamento</option><option value="financiamento_casa">🏠 Financ. Casa</option><option value="educacao">📚 Educação/Cursos</option><option value="assinatura">📱 Assinaturas</option><option value="netflix">🎬 Netflix</option><option value="spotify">🎵 Spotify</option><option value="saude">💊 Saúde</option><option value="vestuario">👕 Vestuário</option><option value="transporte">🚗 Transporte</option><option value="gasolina">⛽ Gasolina</option><option value="outros">💼 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('fp-cat','fabio_pessoal')">＋ Nova categoria</button></div>
+        <div><label>Pagamento</label><select id="fp-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
+        <div><label>Data</label><input type="date" id="fp-data"/></div>
+        <div><label>Obs (opcional)</label><input type="text" id="fp-obs" placeholder="Parcela 1/12…"/></div>
+        <div class="full"><button class="btn-add" onclick="add('fabio_pessoal')">+ Adicionar</button></div>
+      </div>
+    </div>
+    <div class="filtros" id="filt-fp"><button class="ativo" data-f="todos">Todos</button><button data-f="financiamento">🏍️ Financiamento</button><button data-f="educacao">📚 Educação</button><button data-f="assinatura">📱 Assinaturas</button><button data-f="saude">💊 Saúde</button><button data-f="vestuario">👕 Vestuário</button><button data-f="outros">💼 Outros</button></div>
+    <div class="lista" id="lista-fp"></div>
+  </div>
+</section>
+
+<!-- ══ CAMILA ══ -->
+<section class="secao sec-camila" id="sec-camila">
+  <div class="page-header"><h2>Área da Camila Pâmela</h2><p>Gastos diários e pessoais — individual</p></div>
+  <div class="person-tabs">
+    <button class="ptab ativo-c" onclick="setPTab('camila','diario',this)">📅 Gastos Diários</button>
+    <button class="ptab" onclick="setPTab('camila','pessoal',this)">🧾 Gastos Pessoais</button>
+  </div>
+  <div id="camila-diario">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--camila)"></span>Novo gasto diário</div>
+      <div class="voz-wrap" id="voz-wrap-cd">
+        <button class="btn-voz idle" id="btn-voz-cd" onclick="toggleVoz('cd')" title="Falar gasto">🎤</button>
+        <div class="voz-status" id="voz-status-cd">Toque no microfone e fale o gasto</div>
+      </div>
+      <div class="fields">
+        <div><label>Descrição</label><input type="text" id="cd-desc" placeholder="Ex: Mercado, café…"/></div>
+        <div><label>Valor (R$)</label><input type="number" id="cd-val" placeholder="0,00" min="0" step="0.01"/></div>
+        <div><label>Categoria</label><select id="cd-cat"><option value="alimentacao">🍔 Alimentação</option><option value="transporte">⛽ Transporte</option><option value="compras">🛍️ Compras</option><option value="saude">💊 Saúde</option><option value="outros">💼 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('cd-cat','camila_diario')">＋ Nova categoria</button></div>
+        <div><label>Pagamento</label><select id="cd-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
+        <div><label>Data</label><input type="date" id="cd-data"/></div>
+        <div><label>Obs (opcional)</label><input type="text" id="cd-obs" placeholder="Detalhe…"/></div>
+        <div class="full"><button class="btn-add" onclick="add('camila_diario')">+ Adicionar</button></div>
+      </div>
+    </div>
+    <div class="filtros" id="filt-cd"><button class="ativo" data-f="todos">Todos</button><button data-f="alimentacao">🍔 Alimentação</button><button data-f="transporte">⛽ Transporte</button><button data-f="compras">🛍️ Compras</button><button data-f="saude">💊 Saúde</button><button data-f="outros">💼 Outros</button></div>
+    <div class="lista" id="lista-cd"></div>
+  </div>
+  <div id="camila-pessoal" style="display:none">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--camila)"></span>Novo gasto pessoal</div>
+      <div class="fields">
+        <div><label>Descrição</label><input type="text" id="cp-desc" placeholder="Ex: Salão, cursos…"/></div>
+        <div><label>Valor (R$)</label><input type="number" id="cp-val" placeholder="0,00" min="0" step="0.01"/></div>
+        <div><label>Categoria</label><select id="cp-cat"><option value="financiamento">💳 Financiamento</option><option value="educacao">📚 Educação/Cursos</option><option value="assinatura">📱 Assinaturas</option><option value="netflix">🎬 Netflix</option><option value="spotify">🎵 Spotify</option><option value="saude">💊 Saúde/Beleza</option><option value="vestuario">👗 Vestuário</option><option value="transporte">🚗 Transporte</option><option value="gasolina">⛽ Gasolina</option><option value="outros">💼 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('cp-cat','camila_pessoal')">＋ Nova categoria</button></div>
+        <div><label>Pagamento</label><select id="cp-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
+        <div><label>Data</label><input type="date" id="cp-data"/></div>
+        <div><label>Obs (opcional)</label><input type="text" id="cp-obs" placeholder="Parcela 1/12…"/></div>
+        <div class="full"><button class="btn-add" onclick="add('camila_pessoal')">+ Adicionar</button></div>
+      </div>
+    </div>
+    <div class="filtros" id="filt-cp"><button class="ativo" data-f="todos">Todos</button><button data-f="financiamento">💳 Financiamento</button><button data-f="educacao">📚 Educação</button><button data-f="assinatura">📱 Assinaturas</button><button data-f="saude">💊 Saúde</button><button data-f="vestuario">👗 Vestuário</button><button data-f="outros">💼 Outros</button></div>
+    <div class="lista" id="lista-cp"></div>
+  </div>
+</section>
+
+<!-- ══ DOMÉSTICO ══ -->
+<section class="secao sec-casal" id="sec-domestico">
+  <div class="page-header"><h2>Gastos Domésticos</h2><p>Despesas da casa — compartilhado pelo casal</p></div>
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Novo gasto doméstico</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="dom-desc" placeholder="Ex: Supermercado, aluguel…"/></div>
+      <div><label>Valor (R$)</label><input type="number" id="dom-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Categoria</label><select id="dom-cat"><option value="aluguel">🏠 Aluguel</option><option value="financiamento_casa">🏦 Financ. Casa</option><option value="financiamento_moto">🏍️ Financ. Moto</option><option value="alimentacao">🛒 Alimentação</option><option value="internet">📶 Internet</option><option value="agua">💧 Água</option><option value="luz">⚡ Luz</option><option value="gas">🔥 Gás</option><option value="limpeza">🧹 Limpeza</option><option value="outros">📦 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('dom-cat','domestico')">＋ Nova categoria</button></div>
+      <div><label>Quem pagou</label><select id="dom-quem"><option value="fabio">Fábio</option><option value="camila">Camila</option><option value="conjunto">Conjunto</option></select></div>
+      <div><label>Pagamento</label><select id="dom-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
+      <div><label>Data</label><input type="date" id="dom-data"/></div>
+      <div class="full"><label>Obs (opcional)</label><input type="text" id="dom-obs" placeholder="Referência, parcela…"/></div>
+      <div class="full"><button class="btn-add" onclick="add('domestico')">+ Adicionar Gasto Doméstico</button></div>
+    </div>
+  </div>
+  <div class="filtros" id="filt-dom"><button class="ativo" data-f="todos">Todos</button><button data-f="aluguel">🏠 Aluguel</button><button data-f="alimentacao">🛒 Alimentação</button><button data-f="internet">📶 Internet</button><button data-f="agua">💧 Água</button><button data-f="luz">⚡ Luz</button><button data-f="gas">🔥 Gás</button><button data-f="limpeza">🧹 Limpeza</button><button data-f="outros">📦 Outros</button></div>
+  <div class="lista" id="lista-dom"></div>
+</section>
+
+<!-- ══ RESERVAS ══ -->
+<section class="secao" id="sec-reservas">
+  <div class="page-header"><h2>Reservas do Casal</h2><p>Dinheiro separado com propósito — emergência, lazer e os dogs</p></div>
+
+  <!-- EMERGÊNCIA -->
+  <div class="reserva-box emerg">
+    <div class="form-tit"><span class="bar" style="background:var(--emerg)"></span>🚨 Reserva de Emergência</div>
+    <div class="dica-mes" style="margin-bottom:14px;background:#dc262608;border-color:#dc262630"><div class="di">⚠️</div><div><h4 style="color:var(--emerg)">Por que ter reserva de emergência?</h4><p>Gás acabou, carro quebrou, consulta urgente — imprevistos acontecem. Com reserva, vocês resolvem sem estresse e sem dívida. Meta ideal: 3 a 6 meses de despesas.</p></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>Separar por mês (R$)</label><input type="number" id="emerg-pormes" placeholder="Ex: 200"/></div>
+      <div><label>Total já reservado (R$)</label><input type="number" id="emerg-acumulado" placeholder="Ex: 800"/></div>
+    </div>
+    <button class="btn-add" style="background:var(--emerg)" onclick="salvarReserva('emerg')">💾 Salvar Reserva de Emergência</button>
+    <div id="emerg-resumo" style="margin-top:12px"></div>
+  </div>
+
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--emerg)"></span>Registrar uso da emergência</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="emerg-desc" placeholder="Ex: Gás, consulta médica…"/></div>
+      <div><label>Valor usado (R$)</label><input type="number" id="emerg-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Data</label><input type="date" id="emerg-data"/></div>
+      <div><label>Obs</label><input type="text" id="emerg-obs" placeholder="Detalhe…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--emerg)" onclick="add('emergencia')">+ Registrar Uso</button></div>
+    </div>
+    <div class="lista" style="margin-top:12px" id="lista-emerg"></div>
+  </div>
+
+  <hr class="sep"/>
+
+  <!-- LAZER -->
+  <div class="reserva-box lazer">
+    <div class="form-tit"><span class="bar" style="background:var(--lazer)"></span>🎡 Reserva de Lazer</div>
+    <div class="dica-mes" style="margin-bottom:14px;background:#e87c2d08;border-color:#e87c2d30"><div class="di">🎡</div><div><h4 style="color:var(--lazer)">Lazer sem culpa</h4><p>Separar dinheiro para lazer é parte do planejamento, não desperdício. Quando tiver, aproveitam. Quando não tiver, não saem. Simples, sem briga e sem culpa.</p></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>Separar por mês (R$)</label><input type="number" id="lazer-pormes" placeholder="Ex: 300"/></div>
+      <div><label>Total já reservado (R$)</label><input type="number" id="lazer-acumulado" placeholder="Ex: 600"/></div>
+    </div>
+    <button class="btn-add" style="background:var(--lazer)" onclick="salvarReserva('lazer')">💾 Salvar Reserva de Lazer</button>
+    <div id="lazer-resumo" style="margin-top:12px"></div>
+  </div>
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--lazer)"></span>Registrar uso do lazer</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="laz-desc" placeholder="Ex: Restaurante, cinema…"/></div>
+      <div><label>Valor usado (R$)</label><input type="number" id="laz-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Categoria</label><select id="laz-cat"><option value="restaurante">🍽️ Restaurante</option><option value="viagem">✈️ Viagem</option><option value="cinema">🎬 Cinema</option><option value="passeio">🚶 Passeio</option><option value="outros">🎉 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('laz-cat','lazer')">＋ Nova categoria</button></div>
+      <div><label>Quem usou</label><select id="laz-quem"><option value="conjunto">Casal</option><option value="fabio">Fábio</option><option value="camila">Camila</option></select></div>
+      <div><label>Data</label><input type="date" id="laz-data"/></div>
+      <div><label>Obs</label><input type="text" id="laz-obs" placeholder="Detalhe…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--lazer)" onclick="add('lazer')">+ Registrar Uso</button></div>
+    </div>
+    <div class="lista" style="margin-top:12px" id="lista-laz"></div>
+  </div>
+
+  <hr class="sep"/>
+
+  <!-- DOGS -->
+  <div class="reserva-box dogs">
+    <div class="form-tit"><span class="bar" style="background:var(--dogs)"></span>🐾 Reserva dos Dogs</div>
+    <div class="dica-mes" style="margin-bottom:14px;background:#a05c1e08;border-color:#a05c1e30"><div class="di">🐕</div><div><h4 style="color:var(--dogs)">Cuide dos seus melhores amigos</h4><p>Ração, veterinário, banho, tosa, vacinas, remédios — os dogs têm custos reais. Uma reserva exclusiva garante que eles tenham sempre o melhor cuidado, sem impactar o orçamento da casa.</p></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>Separar por mês (R$)</label><input type="number" id="dogs-pormes" placeholder="Ex: 150"/></div>
+      <div><label>Total já reservado (R$)</label><input type="number" id="dogs-acumulado" placeholder="Ex: 300"/></div>
+    </div>
+    <button class="btn-add" style="background:var(--dogs)" onclick="salvarReserva('dogs')">💾 Salvar Reserva dos Dogs</button>
+    <div id="dogs-resumo" style="margin-top:12px"></div>
+  </div>
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--dogs)"></span>Registrar gasto com os dogs</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="dogs-desc" placeholder="Ex: Ração, banho, vet…"/></div>
+      <div><label>Valor (R$)</label><input type="number" id="dogs-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Categoria</label><select id="dogs-cat"><option value="racao">🥣 Ração</option><option value="veterinario">🏥 Veterinário</option><option value="banho">🛁 Banho/Tosa</option><option value="remedio">💊 Remédio</option><option value="outros">🐾 Outros</option></select><button type="button" class="cat-add-btn" onclick="abrirModalCat('dogs-cat','dogs')">＋ Nova categoria</button></div>
+      <div><label>Data</label><input type="date" id="dogs-data"/></div>
+      <div><label>Obs</label><input type="text" id="dogs-obs" placeholder="Nome do dog, detalhe…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--dogs)" onclick="add('dogs')">+ Registrar Gasto dos Dogs</button></div>
+    </div>
+    <div class="lista" style="margin-top:12px" id="lista-dogs"></div>
+  </div>
+</section>
+
+<!-- ══ INVESTIMENTOS ══ -->
+<section class="secao" id="sec-investimentos">
+  <div class="page-header"><h2>Investimentos</h2><p>Aportes mensais e construção do patrimônio</p></div>
+  <div class="reserva-box invest">
+    <div class="form-tit"><span class="bar" style="background:var(--invest)"></span>📈 Meta de investimento</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>Meta mensal (R$)</label><input type="number" id="inv-meta" placeholder="Ex: 300"/></div>
+      <div><label>Total investido acumulado (R$)</label><input type="number" id="inv-acumulado" placeholder="Ex: 1500"/></div>
+    </div>
+    <button class="btn-add" style="background:var(--invest)" onclick="salvarMetaInvest()">💾 Salvar</button>
+    <div id="inv-resumo" style="margin-top:12px"></div>
+  </div>
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--invest)"></span>Novo aporte</div>
+    <div class="fields">
+      <div><label>Descrição</label><input type="text" id="inv-desc" placeholder="Ex: Tesouro Direto…"/></div>
+      <div><label>Valor (R$)</label><input type="number" id="inv-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Tipo</label><select id="inv-tipo"><option value="poupanca">🏦 Poupança</option><option value="tesouro">📜 Tesouro Direto</option><option value="cdb">💳 CDB</option><option value="fundo">📊 Fundo</option><option value="acoes">📈 Ações</option><option value="reserva">🛡️ Reserva</option><option value="outros">💼 Outros</option></select></div>
+      <div><label>De quem</label><select id="inv-quem"><option value="fabio">Fábio</option><option value="camila">Camila</option><option value="casal">Casal</option></select></div>
+      <div><label>Data</label><input type="date" id="inv-data"/></div>
+      <div><label>Plataforma</label><input type="text" id="inv-plat" placeholder="Nubank, XP…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--invest)" onclick="add('investimento')">+ Registrar Aporte</button></div>
+    </div>
+  </div>
+  <div class="dica-mes"><div class="di">📈</div><div><h4>Regra dos 10%</h4><p>Tente investir pelo menos 10% da renda combinada todo mês. Com consistência, em 10 anos vocês vão se surpreender com o resultado. O hábito vale mais que o valor inicial.</p></div></div>
+  <div class="lista" id="lista-inv"></div>
+</section>
+
+<!-- ══ CONTAS A VENCER ══ -->
+<section class="secao" id="sec-contas">
+  <div class="page-header"><h2>Contas a Vencer</h2><p>Cadastre e acompanhe todas as contas com vencimento mensal</p></div>
+
+  <div id="alertaVencimentoEl"></div>
+
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--warn)"></span>Cadastrar nova conta</div>
+    <div class="fields">
+      <div><label>Nome da conta</label><input type="text" id="cv-nome" placeholder="Ex: Financiamento moto…"/></div>
+      <div><label>Valor (R$)</label><input type="number" id="cv-valor" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Dia de vencimento</label><input type="number" id="cv-dia" placeholder="Ex: 10" min="1" max="31"/></div>
+      <div><label>Categoria</label>
+        <select id="cv-cat">
+          <option value="financiamento">🏍️ Financiamento</option>
+          <option value="casa">🏠 Financiamento Casa</option>
+          <option value="agua">💧 Água</option>
+          <option value="luz">⚡ Luz</option>
+          <option value="internet">📶 Internet</option>
+          <option value="gas">🔥 Gás</option>
+          <option value="cartao">💳 Cartão de Crédito</option>
+          <option value="aluguel">🏡 Aluguel</option>
+          <option value="saude">💊 Saúde/Plano</option>
+          <option value="outros">📦 Outros</option>
+        </select>
+      </div>
+      <div><label>De quem</label>
+        <select id="cv-quem">
+          <option value="casal">Casal</option>
+          <option value="fabio">Fábio</option>
+          <option value="camila">Camila</option>
+        </select>
+      </div>
+      <div><label>Obs (opcional)</label><input type="text" id="cv-obs" placeholder="Parcela 3/48…"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--warn)" onclick="addConta()">+ Cadastrar Conta</button></div>
+    </div>
+  </div>
+
+  <div id="listaContas"></div>
+
+  <div class="dica-mes" style="margin-top:16px"><div class="di">📱</div><div><h4>Notificações no celular</h4><p>Ative as notificações abaixo para receber alertas automáticos quando suas contas estiverem perto do vencimento — mesmo com o app fechado.</p></div></div>
+  <div id="notifBannerEl"></div>
+</section>
+
+<!-- ══ RELATÓRIO MENSAL ══ -->
+<section class="secao" id="sec-relatorio">
+  <div class="rel-hero">
+    <h2>Relatório Mensal</h2>
+    <p id="rel-periodo">Carregando...</p>
+  </div>
+  <div class="rel-grid" id="relGridEl"></div>
+  <div class="compare-grid" id="relCompareEl"></div>
+  <div id="relConteudoEl"></div>
+  <button class="btn-exportar" onclick="exportarRelatorio()">📋 Copiar Relatório Completo</button>
+</section>
+
+<!-- ══ MURAL DO CASAL ══ -->
+<section class="secao" id="sec-mural">
+  <div class="page-header"><h2>Mural do Casal</h2><p>Recados financeiros entre vocês dois — em tempo real</p></div>
+
+  <div id="muralAlertaEl"></div>
+
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Deixar uma nota</div>
+    <div style="margin-bottom:12px">
+      <label>Notas rápidas</label>
+      <div class="rapidas" style="margin-top:6px">
+        <button class="rapida-btn" onclick="notaRapida('💸 Fiz um saque em dinheiro')">💸 Fiz um saque</button>
+        <button class="rapida-btn" onclick="notaRapida('💳 Usei o cartão de crédito')">💳 Usei o cartão</button>
+        <button class="rapida-btn" onclick="notaRapida('🛒 Fiz compras hoje')">🛒 Fiz compras</button>
+        <button class="rapida-btn" onclick="notaRapida('💰 Recebi meu salário')">💰 Recebi salário</button>
+        <button class="rapida-btn" onclick="notaRapida('📱 Paguei uma conta')">📱 Paguei conta</button>
+        <button class="rapida-btn" onclick="notaRapida('🏦 Fiz uma transferência')">🏦 Transferência</button>
+      </div>
+    </div>
+    <div class="fields">
+      <div class="full">
+        <label>Mensagem</label>
+        <textarea id="muralMsg" placeholder="Ex: Retirei R$200 do Mercado Pago para pagar o gás..." style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.87rem;padding:10px 12px;resize:vertical;min-height:80px;outline:none;margin-top:4px;transition:border-color .2s;line-height:1.5;" onfocus="this.style.borderColor='var(--casal)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <div>
+        <label>Quem está enviando</label>
+        <select id="muralQuem">
+          <option value="fabio">👤 Fábio</option>
+          <option value="camila">👩 Camila</option>
+        </select>
+      </div>
+      <div class="full">
+        <button class="btn-add" style="background:var(--casal)" onclick="enviarNota()">📨 Enviar Nota</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <h3 style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">📋 Histórico de notas</h3>
+    <button class="btn-sm" onclick="limparNotas()">🗑️ Limpar tudo</button>
+  </div>
+  <div id="listaMural"></div>
+</section>
+
+<!-- ══ METAS & SONHOS ══ -->
+<section class="secao" id="sec-metas">
+  <div class="page-header"><h2>Metas & Sonhos</h2><p>Objetivos individuais e do casal — com progresso visual</p></div>
+  <div class="metas-tabs">
+    <button class="mtab ativo-f" onclick="setMetaTab(this,'fabio')">👤 Fábio</button>
+    <button class="mtab" onclick="setMetaTab(this,'camila')">👩 Camila</button>
+    <button class="mtab" onclick="setMetaTab(this,'casal')">💑 Casal</button>
+  </div>
+
+  <div id="metas-fabio">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--fabio)"></span>Novo sonho — Fábio</div>
+      <div class="fields">
+        <div><label>Objetivo</label><input type="text" id="mf-nome" placeholder="Ex: Moto nova, viagem…"/></div>
+        <div><label>Valor necessário (R$)</label><input type="number" id="mf-alvo" placeholder="5000"/></div>
+        <div><label>Já guardado (R$)</label><input type="number" id="mf-atual" placeholder="0"/></div>
+        <div><label>Prazo</label><input type="month" id="mf-prazo"/></div>
+        <div><label>Ícone</label><select id="mf-icon"><option value="🏍️">🏍️ Moto</option><option value="✈️">✈️ Viagem</option><option value="🏠">🏠 Casa</option><option value="🚗">🚗 Carro</option><option value="📱">📱 Eletrônico</option><option value="🎓">🎓 Educação</option><option value="⭐">⭐ Outro</option></select></div>
+        <div class="full"><button class="btn-add" style="background:var(--fabio)" onclick="addMeta('fabio')">+ Adicionar Meta</button></div>
+      </div>
+    </div>
+    <div id="lista-metas-fabio"></div>
+  </div>
+
+  <div id="metas-camila" style="display:none">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--camila)"></span>Novo sonho — Camila</div>
+      <div class="fields">
+        <div><label>Objetivo</label><input type="text" id="mc-nome" placeholder="Ex: Curso, viagem…"/></div>
+        <div><label>Valor necessário (R$)</label><input type="number" id="mc-alvo" placeholder="5000"/></div>
+        <div><label>Já guardado (R$)</label><input type="number" id="mc-atual" placeholder="0"/></div>
+        <div><label>Prazo</label><input type="month" id="mc-prazo"/></div>
+        <div><label>Ícone</label><select id="mc-icon"><option value="✈️">✈️ Viagem</option><option value="🎓">🎓 Educação</option><option value="👗">👗 Moda</option><option value="💄">💄 Beleza</option><option value="📱">📱 Eletrônico</option><option value="🏠">🏠 Casa</option><option value="⭐">⭐ Outro</option></select></div>
+        <div class="full"><button class="btn-add" style="background:var(--camila)" onclick="addMeta('camila')">+ Adicionar Meta</button></div>
+      </div>
+    </div>
+    <div id="lista-metas-camila"></div>
+  </div>
+
+  <div id="metas-casal" style="display:none">
+    <div class="form-box">
+      <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Novo sonho — Casal</div>
+      <div class="fields">
+        <div><label>Objetivo</label><input type="text" id="mca-nome" placeholder="Ex: Viagem, casa…"/></div>
+        <div><label>Valor necessário (R$)</label><input type="number" id="mca-alvo" placeholder="10000"/></div>
+        <div><label>Já guardado (R$)</label><input type="number" id="mca-atual" placeholder="0"/></div>
+        <div><label>Prazo</label><input type="month" id="mca-prazo"/></div>
+        <div><label>Ícone</label><select id="mca-icon"><option value="✈️">✈️ Viagem</option><option value="🏠">🏠 Casa</option><option value="💒">💒 Casamento</option><option value="👶">👶 Filho</option><option value="🚗">🚗 Carro</option><option value="🛡️">🛡️ Reserva</option><option value="⭐">⭐ Outro</option></select></div>
+        <div class="full"><button class="btn-add" style="background:var(--casal)" onclick="addMeta('casal')">+ Adicionar Meta</button></div>
+      </div>
+    </div>
+    <div id="lista-metas-casal"></div>
+    <div class="dica-mes" style="margin-top:12px"><div class="di">🌟</div><div><h4>Sonhar junto é o começo</h4><p>Objetivos compartilhados transformam o sacrifício de não gastar em motivação de guardar. Quando os dois sabem para onde vão, fica muito mais fácil tomar decisões financeiras juntos.</p></div></div>
+  </div>
+</section>
+
+</div><!-- content -->
+</div><!-- layout -->
+
+<!-- MOBILE NAV -->
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="fecharDrawer()"></div>
+<div class="drawer" id="drawerMenu">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Navegar para</div>
+  <div class="drawer-grid">
+    <button class="drawer-btn" data-sec="educacao" onclick="setSecaoDrawer(this)"><span class="di">💡</span>Educação</button>
+    <button class="drawer-btn" data-sec="resumo" onclick="setSecaoDrawer(this)"><span class="di">📊</span>Resumo</button>
+    <button class="drawer-btn" data-sec="receitas" onclick="setSecaoDrawer(this)"><span class="di">💰</span>Receitas</button>
+    <button class="drawer-btn" data-sec="fontes" onclick="setSecaoDrawer(this)"><span class="di">💵</span>Fontes</button>
+    <button class="drawer-btn" data-sec="recorrentes" onclick="setSecaoDrawer(this)"><span class="di">🔄</span>Fixos</button>
+    <button class="drawer-btn" data-sec="fabio" onclick="setSecaoDrawer(this)"><span class="di">👤</span>Fábio</button>
+    <button class="drawer-btn" data-sec="camila" onclick="setSecaoDrawer(this)"><span class="di">👩</span>Camila</button>
+    <button class="drawer-btn" data-sec="domestico" onclick="setSecaoDrawer(this)"><span class="di">🏠</span>Casa</button>
+    <button class="drawer-btn" data-sec="reservas" onclick="setSecaoDrawer(this)"><span class="di">🛡️</span>Reservas</button>
+    <button class="drawer-btn" data-sec="investimentos" onclick="setSecaoDrawer(this)"><span class="di">📈</span>Invest.</button>
+    <button class="drawer-btn" data-sec="contas" onclick="setSecaoDrawer(this)"><span class="di">📅</span>Contas</button>
+    <button class="drawer-btn" data-sec="relatorio" onclick="setSecaoDrawer(this)"><span class="di">📄</span>Relatório</button>
+    <button class="drawer-btn" data-sec="mural" onclick="setSecaoDrawer(this)"><span class="di">📝</span>Mural</button>
+    <button class="drawer-btn" data-sec="metas" onclick="setSecaoDrawer(this)"><span class="di">🎯</span>Metas</button>
+  </div>
+</div>
+
+<div class="mobile-nav">
+  <button class="mob-btn ativo" id="mob-educacao" onclick="setSecaoMob('educacao',this)"><span class="mi">💡</span>Início</button>
+  <button class="mob-btn" id="mob-resumo" onclick="setSecaoMob('resumo',this)"><span class="mi">📊</span>Resumo</button>
+  <button class="mob-btn" id="mob-fabio" onclick="setSecaoMob('fabio',this)"><span class="mi">👤</span>Fábio</button>
+  <button class="mob-btn" id="mob-camila" onclick="setSecaoMob('camila',this)"><span class="mi">👩</span>Camila</button>
+  <button class="mob-btn" onclick="abrirDrawer()"><span class="mi">☰</span>Menu</button>
+</div>
+
+</div><!-- telaApp -->
+
+<!-- MODAL CATEGORIAS -->
+<div class="overlay" id="overlayCat" onclick="fecharOverlay('overlayCat',event)">
+  <div class="modal">
+    <h2>＋ Nova Categoria</h2>
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Crie uma categoria personalizada para esta seção</p>
+    <label>Ícone (emoji)</label>
+    <input type="text" id="catModalIcon" placeholder="Ex: 🏍️ 🎮 🐕" maxlength="4" style="margin-top:6px;font-size:1.3rem;text-align:center;letter-spacing:4px"/>
+    <label style="margin-top:12px">Nome da categoria</label>
+    <input type="text" id="catModalNome" placeholder="Ex: Financiamento moto, Netflix…" style="margin-top:6px"/>
+    <div style="margin-top:14px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Categorias personalizadas desta seção</div>
+      <div id="catModalLista" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal('overlayCat')">Fechar</button>
+      <button class="btn-confirm" onclick="salvarNovaCategoria()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENDA -->
+<div class="overlay" id="overlayRenda" onclick="fecharOverlay('overlayRenda',event)">
+  <div class="modal">
+    <h2 id="modalRendaTit">Editar Renda</h2>
+    <label>Renda mensal (R$)</label><input type="number" id="modalRendaVal" placeholder="Ex: 2500"/>
+    <label style="margin-top:10px">Contribuição doméstica (R$)</label><input type="number" id="modalRendaContrib" placeholder="Ex: 1500"/>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal('overlayRenda')">Cancelar</button>
+      <button class="btn-confirm" onclick="salvarRenda()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SENHA='Mus@s2026';
+
+function tentarLogin(){
+  const val = document.getElementById('inputSenha').value.trim();
+  if(val === SENHA){
+    document.getElementById('telaLogin').style.display='none';
+    document.getElementById('telaApp').style.display='block';
+    init();
+  } else {
+    document.getElementById('loginErr').textContent='Senha incorreta. Tente novamente.';
+    document.getElementById('inputSenha').value='';
+    document.getElementById('inputSenha').focus();
+  }
+}
+document.getElementById('inputSenha').addEventListener('keydown',e=>{if(e.key==='Enter')tentarLogin();});
+
+// STORAGE — Firebase compat + localStorage fallback
+const FIREBASE_DOC_ID = 'nosdois_dados';
+
+async function fbGet(key){
+  try{
+    if(window._db){
+      const snap = await window._db.collection('app').doc(FIREBASE_DOC_ID).get();
+      if(snap.exists){
+        const data = snap.data();
+        return data[key] !== undefined ? String(data[key]) : null;
+      }
+    }
+  }catch(e){console.warn('FB get err:',e);}
+  return localStorage.getItem(key);
+}
+
+async function fbSet(key, value){
+  try{
+    if(window._db){
+      await window._db.collection('app').doc(FIREBASE_DOC_ID).set({[key]: value},{merge:true});
+      localStorage.setItem(key, value);
+      return;
+    }
+  }catch(e){console.warn('FB set err:',e);}
+  localStorage.setItem(key, value);
+}
+
+const store={
+  async get(k){return fbGet(k);},
+  async set(k,v){return fbSet(k,v);}
+};
+
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let mes=new Date().getMonth(),ano=new Date().getFullYear();
+let _rF=0,_rC=0,_cF=0,_cC=0,_modalRendaPessoa='fabio';
+const filtros={};
+const TIPOS=['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal','domestico','lazer','investimento','emergencia','dogs'];
+TIPOS.forEach(t=>filtros[t]='todos');
+
+function chave(t){return`nd2_${ano}_${mes}_${t}`;}
+function chaveG(k){return`nd2_g_${k}`;}
+function chaveM(k){return`nd2_m_${ano}_${mes}_${k}`;}
+async function carregar(t){const r=await store.get(chave(t));return r?JSON.parse(r):[];}
+async function salvar(t,d){await store.set(chave(t),JSON.stringify(d));}
+function hoje(){return new Date().toISOString().split('T')[0];}
+function fmt(v){return'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function fmtD(s){if(!s)return'';const[a,m,d]=s.split('-');return`${d}/${m}`;}
+
+// NAV
+function setSecao(btn){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('ativo'));
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  btn.classList.add('ativo');
+  document.getElementById('sec-'+btn.dataset.sec).classList.add('ativa');
+  if(btn.dataset.sec==='relatorio')renderRelatorio();
+  if(btn.dataset.sec==='mural')renderMural();
+  if(btn.dataset.sec==='fontes')renderFontes();
+  if(btn.dataset.sec==='recorrentes')renderRecorrentes();
+}
+function setSecaoMob(sec,btn){
+  document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  btn.classList.add('ativo');
+  document.getElementById('sec-'+sec).classList.add('ativa');
+}
+function abrirDrawer(){
+  document.getElementById('drawerOverlay').classList.add('aberto');
+  document.getElementById('drawerMenu').classList.add('aberto');
+}
+function fecharDrawer(){
+  document.getElementById('drawerOverlay').classList.remove('aberto');
+  document.getElementById('drawerMenu').classList.remove('aberto');
+}
+function setSecaoDrawer(btn){
+  const sec=btn.dataset.sec;
+  document.querySelectorAll('.drawer-btn').forEach(b=>b.classList.remove('ativo'));
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  document.getElementById('sec-'+sec).classList.add('ativa');
+  const mobBtn=document.getElementById('mob-'+sec);
+  if(mobBtn)mobBtn.classList.add('ativo');
+  if(sec==='relatorio')renderRelatorio();
+  if(sec==='mural')renderMural();
+  fecharDrawer();
+}
+function setEduTab(btn,panel){
+  document.querySelectorAll('.edu-stab').forEach(b=>b.classList.remove('ativo'));
+  document.querySelectorAll('.edu-panel').forEach(p=>p.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  document.getElementById('epanel-'+panel).classList.add('ativo');
+}
+function setPTab(pessoa,aba,btn){
+  const sec=document.getElementById('sec-'+pessoa);
+  sec.querySelectorAll('.ptab').forEach(b=>{b.className='ptab';});
+  btn.classList.add(pessoa==='fabio'?'ativo-f':'ativo-c');
+  document.getElementById(pessoa+'-diario').style.display=aba==='diario'?'block':'none';
+  document.getElementById(pessoa+'-pessoal').style.display=aba==='pessoal'?'block':'none';
+}
+function setMetaTab(btn,quem){
+  document.querySelectorAll('.mtab').forEach(b=>{b.className='mtab';});
+  btn.classList.add('ativo-'+quem);
+  ['fabio','camila','casal'].forEach(q=>{document.getElementById('metas-'+q).style.display=q===quem?'block':'none';});
+}
+
+// MÊS
+function mudarMes(d){
+  mes+=d;
+  if(mes<0){mes=11;ano--;}
+  if(mes>11){mes=0;ano++;}
+  document.getElementById('labelMes').textContent=`${MESES[mes]} ${ano}`;
+  renderAll();
+}
+
+// ADD
+const CAMPOS={
+  fabio_diario:['fd-desc','fd-val','fd-cat','fd-pag','fd-data','fd-obs'],
+  fabio_pessoal:['fp-desc','fp-val','fp-cat','fp-pag','fp-data','fp-obs'],
+  camila_diario:['cd-desc','cd-val','cd-cat','cd-pag','cd-data','cd-obs'],
+  camila_pessoal:['cp-desc','cp-val','cp-cat','cp-pag','cp-data','cp-obs'],
+  domestico:['dom-desc','dom-val','dom-cat','dom-quem','dom-pag','dom-data','dom-obs'],
+  lazer:['laz-desc','laz-val','laz-cat','laz-quem','laz-data','laz-obs'],
+  investimento:['inv-desc','inv-val','inv-tipo','inv-quem','inv-data','inv-plat'],
+  emergencia:['emerg-desc','emerg-val',null,null,'emerg-data','emerg-obs'],
+  dogs:['dogs-desc','dogs-val','dogs-cat',null,'dogs-data','dogs-obs'],
+};
+async function add(tipo){
+  const ids=CAMPOS[tipo];
+  const g=id=>{const el=document.getElementById(id);return el?el.value:'';};
+  const desc=g(ids[0]).trim();
+  const valor=parseFloat(g(ids[1]));
+  if(!desc||isNaN(valor)||valor<=0){alert('Preencha descrição e valor!');return;}
+  const item={id:Date.now(),desc,valor};
+  if(ids[2])item.cat=g(ids[2]);
+  if(ids[3])item.quem=g(ids[3]);
+  if(ids[4])item.data=g(ids[4]);
+  if(ids[5])item.obs=g(ids[5]).trim();
+  if(tipo==='investimento'){item.tipo=g(ids[2]);item.quem=g(ids[3]);item.plat=g(ids[5]).trim();}
+  const dados=await carregar(tipo);
+  dados.push(item);
+  await salvar(tipo,dados);
+  [ids[0],ids[1],ids[5]].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const dataEl=document.getElementById(ids[4]);if(dataEl)dataEl.value=hoje();
+  renderAll();
+}
+async function del(tipo,id){
+  if(!confirm('Remover este lançamento?'))return;
+  const dados=(await carregar(tipo)).filter(g=>g.id!==id);
+  await salvar(tipo,dados);renderAll();
+}
+
+// FILTROS
+const FILT_MAP={fabio_diario:'filt-fd',fabio_pessoal:'filt-fp',camila_diario:'filt-cd',camila_pessoal:'filt-cp',domestico:'filt-dom'};
+function bindFiltros(){
+  Object.entries(FILT_MAP).forEach(([tipo,wrId])=>{
+    const wr=document.getElementById(wrId);if(!wr)return;
+    wr.querySelectorAll('button').forEach(b=>{
+      b.onclick=()=>{
+        wr.querySelectorAll('button').forEach(x=>x.classList.remove('ativo'));
+        b.classList.add('ativo');filtros[tipo]=b.dataset.f;
+        renderLista(tipo,window._cache[tipo]||[]);
+      };
+    });
+  });
+}
+
+// RENDER LISTA
+const CAT_ICONS={alimentacao:'🍔',transporte:'⛽',compras:'🛍️',saude:'💊',financiamento:'🏍️',financiamento_casa:'🏠',financiamento_moto:'🏍️',educacao:'📚',assinatura:'📱',netflix:'🎬',spotify:'🎵',vestuario:'👕',gasolina:'⛽',aluguel:'🏠',internet:'📶',agua:'💧',luz:'⚡',gas:'🔥',limpeza:'🧹',restaurante:'🍽️',viagem:'✈️',cinema:'🎬',passeio:'🚶',presente:'🎁',poupanca:'🏦',tesouro:'📜',cdb:'💳',fundo:'📊',acoes:'📈',reserva:'🛡️',racao:'🥣',veterinario:'🏥',banho:'🛁',remedio:'💊',outros:'💼'};
+const QTAGS={fabio:'<span class="tag tag-f">Fábio</span>',camila:'<span class="tag tag-c">Camila</span>',casal:'<span class="tag tag-casal">Casal</span>',conjunto:'<span class="tag tag-casal">Casal</span>'};
+
+function renderLista(tipo,dados){
+  const listId={fabio_diario:'lista-fd',fabio_pessoal:'lista-fp',camila_diario:'lista-cd',camila_pessoal:'lista-cp',domestico:'lista-dom',lazer:'lista-laz',investimento:'lista-inv',emergencia:'lista-emerg',dogs:'lista-dogs'}[tipo];
+  if(!listId)return;
+  const el=document.getElementById(listId);if(!el)return;
+  const f=filtros[tipo]||'todos';
+  const catKey=tipo==='investimento'?'tipo':'cat';
+  const lista=f==='todos'?dados:dados.filter(g=>g[catKey]===f);
+  lista.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const cor={fabio_diario:'fabio',fabio_pessoal:'fabio',camila_diario:'camila',camila_pessoal:'camila',domestico:'casal',lazer:'lazer',investimento:'invest',emergencia:'emerg',dogs:'dogs'}[tipo]||'casal';
+  if(!lista.length){el.innerHTML='<div class="vazio">Nenhum lançamento ainda ✨</div>';return;}
+  el.innerHTML=lista.map(g=>{
+    const catV=g[catKey]||'outros';
+    const icon=CAT_ICONS[catV]||'💼';
+    const qt=g.quem?(QTAGS[g.quem]||''):'';
+    const platInfo=g.plat?` · ${g.plat}`:'';
+    return`<div class="item"><div class="item-ic">${icon}</div><div class="item-info"><div class="item-nome">${g.desc}${qt}</div><div class="item-meta">${fmtD(g.data)}${g.obs?' · '+g.obs:''}${platInfo}</div></div><div class="item-val ${cor}">${fmt(g.valor)}</div><button class="item-del" onclick="del('${tipo}',${g.id})">✕</button></div>`;
+  }).join('');
+}
+
+// RENDA
+function abrirModalRenda(p){
+  _modalRendaPessoa=p;
+  document.getElementById('modalRendaTit').textContent='✏️ Renda de '+(p==='fabio'?'Fábio':'Camila');
+  document.getElementById('modalRendaVal').value=p==='fabio'?(_rF||''):(_rC||'');
+  document.getElementById('modalRendaContrib').value=p==='fabio'?(_cF||''):(_cC||'');
+  document.getElementById('overlayRenda').classList.add('aberto');
+}
+async function salvarRenda(){
+  const val=parseFloat(document.getElementById('modalRendaVal').value)||0;
+  const contrib=parseFloat(document.getElementById('modalRendaContrib').value)||0;
+  const p=_modalRendaPessoa;
+  await store.set(chaveG(p+'_renda'),String(val));
+  await store.set(chaveG(p+'_contrib'),String(contrib));
+  fecharModal('overlayRenda');renderAll();
+}
+async function carregarRendas(){
+  const r=async k=>parseFloat(await store.get(chaveG(k))||'0')||0;
+  _rF=await r('fabio_renda');_cF=await r('fabio_contrib');
+  _rC=await r('camila_renda');_cC=await r('camila_contrib');
+}
+function renderReceitas(){
+  document.getElementById('rendaFabioEl').textContent=fmt(_rF);
+  document.getElementById('rendaCamilaEl').textContent=fmt(_rC);
+  document.getElementById('contribFabioEl').textContent=`Contribuição doméstica: ${fmt(_cF)}`;
+  document.getElementById('contribCamilaEl').textContent=`Contribuição doméstica: ${fmt(_cC)}`;
+  const total=_rF+_rC;
+  document.getElementById('rendaTotalEl').textContent=fmt(total);
+  document.getElementById('contribInfoEl').textContent=total>0?`Fundo doméstico: ${fmt(_cF+_cC)}`:'Adicione as rendas';
+}
+
+// PORQUÊ
+async function salvarPorque(quem){
+  const txt=document.getElementById('pq-'+quem).value;
+  await store.set(chaveG('porque_'+quem),txt);
+  alert('Salvo! 💚');
+}
+async function carregarPorques(){
+  const qs=['fabio','camila','casal'];
+  for(const q of qs){
+    const txt=await store.get(chaveG('porque_'+q));
+    if(txt)document.getElementById('pq-'+q).value=txt;
+  }
+}
+
+// RESERVAS
+async function salvarReserva(tipo){
+  const pm=parseFloat(document.getElementById(tipo+'-pormes').value)||0;
+  const ac=parseFloat(document.getElementById(tipo+'-acumulado').value)||0;
+  await store.set(chaveG('res_'+tipo+'_pm'),String(pm));
+  await store.set(chaveG('res_'+tipo+'_ac'),String(ac));
+  renderReservas();
+}
+async function carregarReserva(tipo){
+  const pm=parseFloat(await store.get(chaveG('res_'+tipo+'_pm'))||'0')||0;
+  const ac=parseFloat(await store.get(chaveG('res_'+tipo+'_ac'))||'0')||0;
+  return{pm,ac};
+}
+function reservaResumoHtml(pm,ac,usado,cor){
+  const saldo=ac-usado;
+  return`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
+    <div class="mini-card"><div class="lbl">Por mês</div><div class="val" style="color:${cor}">${fmt(pm)}</div></div>
+    <div class="mini-card"><div class="lbl">Já usado</div><div class="val" style="color:var(--emerg)">${fmt(usado)}</div></div>
+    <div class="mini-card"><div class="lbl">Saldo</div><div class="val" style="color:${saldo>=0?'var(--casal)':'var(--emerg)'}">${fmt(saldo)}</div></div>
+  </div>`;
+}
+async function renderReservas(){
+  const [re,rl,rd]=await Promise.all([carregarReserva('emerg'),carregarReserva('lazer'),carregarReserva('dogs')]);
+  const usadoE=(window._cache?.emergencia||[]).reduce((a,g)=>a+g.valor,0);
+  const usadoL=(window._cache?.lazer||[]).reduce((a,g)=>a+g.valor,0);
+  const usadoD=(window._cache?.dogs||[]).reduce((a,g)=>a+g.valor,0);
+  // fill inputs
+  if(re.pm)document.getElementById('emerg-pormes').value=re.pm;
+  if(re.ac)document.getElementById('emerg-acumulado').value=re.ac;
+  if(rl.pm)document.getElementById('lazer-pormes').value=rl.pm;
+  if(rl.ac)document.getElementById('lazer-acumulado').value=rl.ac;
+  if(rd.pm)document.getElementById('dogs-pormes').value=rd.pm;
+  if(rd.ac)document.getElementById('dogs-acumulado').value=rd.ac;
+  const er=document.getElementById('emerg-resumo');if(er)er.innerHTML=reservaResumoHtml(re.pm,re.ac,usadoE,'var(--emerg)');
+  const lr=document.getElementById('lazer-resumo');if(lr)lr.innerHTML=reservaResumoHtml(rl.pm,rl.ac,usadoL,'var(--lazer)');
+  const dr=document.getElementById('dogs-resumo');if(dr)dr.innerHTML=reservaResumoHtml(rd.pm,rd.ac,usadoD,'var(--dogs)');
+  // grid no resumo
+  const rg=document.getElementById('reservasGridEl');
+  if(rg){
+    const sE=re.ac-usadoE,sL=rl.ac-usadoL,sD=rd.ac-usadoD;
+    rg.innerHTML=`
+      <div class="reserva-mini"><div class="rlbl">🚨 Emergência</div><div class="rval" style="color:${sE>=0?'var(--emerg)':'var(--emerg)'}">${fmt(sE>=0?sE:0)}</div><div class="rsub">Acumulado: ${fmt(re.ac)}</div></div>
+      <div class="reserva-mini"><div class="rlbl">🎡 Lazer</div><div class="rval" style="color:var(--lazer)">${fmt(sL>=0?sL:0)}</div><div class="rsub">Acumulado: ${fmt(rl.ac)}</div></div>
+      <div class="reserva-mini"><div class="rlbl">🐾 Dogs</div><div class="rval" style="color:var(--dogs)">${fmt(sD>=0?sD:0)}</div><div class="rsub">Acumulado: ${fmt(rd.ac)}</div></div>`;
+  }
+  return{re,rl,rd,usadoE,usadoL,usadoD};
+}
+
+// INVESTIMENTOS
+async function salvarMetaInvest(){
+  const meta=parseFloat(document.getElementById('inv-meta').value)||0;
+  const ac=parseFloat(document.getElementById('inv-acumulado').value)||0;
+  await store.set(chaveG('inv_meta'),String(meta));
+  await store.set(chaveG('inv_ac'),String(ac));
+  renderInvResumo();
+}
+async function renderInvResumo(){
+  const meta=parseFloat(await store.get(chaveG('inv_meta'))||'0')||0;
+  const ac=parseFloat(await store.get(chaveG('inv_ac'))||'0')||0;
+  const mes_inv=(window._cache?.investimento||[]).reduce((a,g)=>a+g.valor,0);
+  if(meta)document.getElementById('inv-meta').value=meta;
+  if(ac)document.getElementById('inv-acumulado').value=ac;
+  const el=document.getElementById('inv-resumo');if(!el)return;
+  const pct=meta>0?Math.min(mes_inv/meta*100,100).toFixed(0):0;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
+    <div class="mini-card"><div class="lbl">Meta/mês</div><div class="val" style="color:var(--invest)">${fmt(meta)}</div></div>
+    <div class="mini-card"><div class="lbl">Investido mês</div><div class="val" style="color:var(--invest)">${fmt(mes_inv)}</div></div>
+    <div class="mini-card"><div class="lbl">Total acumulado</div><div class="val" style="color:var(--casal)">${fmt(ac+mes_inv)}</div></div>
+  </div>${meta?`<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-bottom:4px"><span>Progresso do mês</span><span>${pct}%</span></div><div class="saude-bar-track"><div class="saude-bar-fill" style="width:${pct}%;background:var(--invest)"></div></div></div>`:''}`;
+  return{meta,ac,mes_inv};
+}
+
+// METAS
+async function addMeta(quem){
+  const p=quem==='fabio'?'mf':quem==='camila'?'mc':'mca';
+  const nome=document.getElementById(p+'-nome').value.trim();
+  const alvo=parseFloat(document.getElementById(p+'-alvo').value)||0;
+  const atual=parseFloat(document.getElementById(p+'-atual').value)||0;
+  const prazo=document.getElementById(p+'-prazo').value;
+  const icon=document.getElementById(p+'-icon').value;
+  if(!nome||!alvo){alert('Preencha nome e valor!');return;}
+  const key='nd2_metas_'+quem;
+  const raw=await store.get(key);
+  const metas=raw?JSON.parse(raw):[];
+  metas.push({id:Date.now(),nome,alvo,atual,prazo,icon});
+  await store.set(key,JSON.stringify(metas));
+  document.getElementById(p+'-nome').value='';
+  document.getElementById(p+'-alvo').value='';
+  document.getElementById(p+'-atual').value='';
+  renderMetas();
+}
+async function delMeta(quem,id){
+  if(!confirm('Remover esta meta?'))return;
+  const key='nd2_metas_'+quem;
+  const raw=await store.get(key);
+  const metas=(raw?JSON.parse(raw):[]).filter(m=>m.id!==id);
+  await store.set(key,JSON.stringify(metas));
+  renderMetas();
+}
+async function renderMetas(){
+  const quens=['fabio','camila','casal'];
+  const corMap={fabio:'fabio',camila:'camila',casal:'casal'};
+  for(const quem of quens){
+    const key='nd2_metas_'+quem;
+    const raw=await store.get(key);
+    const metas=raw?JSON.parse(raw):[];
+    const el=document.getElementById('lista-metas-'+quem);if(!el)continue;
+    if(!metas.length){el.innerHTML='<div class="vazio">Nenhuma meta ainda — adicione o primeiro sonho! 🌟</div>';continue;}
+    const cor=`var(--${corMap[quem]})`;
+    el.innerHTML=metas.map(m=>{
+      const pct=Math.min((m.atual/m.alvo)*100,100).toFixed(0);
+      const prazoStr=m.prazo?` · ${m.prazo.split('-').reverse().join('/')}` :'';
+      return`<div class="meta-card"><div class="meta-top"><div><div class="meta-nome">${m.icon} ${m.nome}</div><div style="font-size:.7rem;color:var(--muted);margin-top:2px">${fmt(m.atual)} de ${fmt(m.alvo)}${prazoStr}</div></div><button class="item-del" onclick="delMeta('${quem}',${m.id})">✕</button></div><div class="meta-track"><div class="meta-fill meta-fill-${quem==='casal'?'casal':quem}" style="width:${pct}%"></div></div><div class="meta-pct">${pct}% concluído</div></div>`;
+    }).join('');
+  }
+}
+
+// TERMÔMETRO
+function renderTermometro(cache,renda,totalGasto,totalInv,re,rl,rd,usadoE){
+  const pct=renda>0?(totalGasto/renda*100):0;
+  const temReserva=re.ac>0;
+  const investindo=totalInv>0;
+  const temLazer=rl.pm>0;
+  const temDogs=rd.pm>0;
+  const gastosOk=pct<80;
+  const items=[
+    {ok:temReserva,label:'Reserva de emergência criada',status:temReserva?'Ativa':'Criar reserva'},
+    {ok:gastosOk,label:'Gastos abaixo de 80% da renda',status:gastosOk?`${pct.toFixed(0)}% comprometido`:`${pct.toFixed(0)}% — atenção!`},
+    {ok:investindo,label:'Investindo este mês',status:investindo?`${fmt(totalInv)} aportado`:'Nenhum aporte'},
+    {ok:temLazer,label:'Reserva de lazer definida',status:temLazer?`${fmt(rl.pm)}/mês`:'Definir reserva'},
+    {ok:temDogs,label:'Reserva dos dogs definida',status:temDogs?`${fmt(rd.pm)}/mês`:'Definir reserva'},
+  ];
+  const el=document.getElementById('termometroEl');if(!el)return;
+  el.innerHTML=items.map(i=>`<div class="term-item"><div class="term-check">${i.ok?'✅':'⚠️'}</div><div class="term-label">${i.label}</div><div class="term-status ${i.ok?'term-ok':'term-warn'}">${i.status}</div></div>`).join('');
+}
+
+// RESUMO
+function gerarFrase(pct){
+  if(pct<50)return'✨ Vocês estão mandando muito bem esse mês! O orçamento está muito saudável.';
+  if(pct<75)return'👍 Bom controle! Ainda há espaço para investir um pouco mais.';
+  if(pct<90)return'⚠️ Atenção — mais de 75% da renda comprometida. Vale revisar os gastos.';
+  if(pct<100)return'🚨 Cuidado! Os gastos estão quase no limite da renda de vocês.';
+  return'💪 Esse mês foi puxado, mas vocês estão juntos nisso. Ajustem para o próximo!';
+}
+function gerarSugestoes(saldo,totalInv,re){
+  const s=[];
+  if(saldo<=0){s.push({si:'🛑',badge:'badge-warn',bt:'Atenção',titulo:'Gastos acima da renda',txt:'Os gastos superaram a renda este mês. Revisem os lançamentos e identifiquem onde é possível cortar.'});return s;}
+  if(re.ac<1){s.push({si:'🛡️',badge:'badge-reserve',bt:'Prioridade',titulo:'Crie a reserva de emergência',txt:`Vocês têm ${fmt(saldo)} de saldo. A reserva de emergência é o primeiro passo — comece com qualquer valor, mesmo que pequeno.`});}
+  if(totalInv===0&&saldo>0){s.push({si:'📈',badge:'badge-invest',bt:'Investimento',titulo:'Comece a investir agora',txt:`Com ${fmt(saldo)} sobrando, que tal destinar pelo menos R$100 para o Tesouro Selic? Liquidez diária e rende mais que a poupança.`});}
+  if(saldo>500){s.push({si:'📜',badge:'badge-invest',bt:'Renda fixa',titulo:'Tesouro Direto — seguro e rentável',txt:'O Tesouro Selic é garantido pelo governo, tem liquidez diária e rende mais que a poupança. Ideal para reserva ou objetivos de médio prazo.'});}
+  if(saldo>1000){s.push({si:'🏦',badge:'badge-invest',bt:'CDB',titulo:'CDB com liquidez diária',txt:'Bancos digitais como Nubank e Inter oferecem CDBs com 100%+ do CDI e liquidez diária. Uma boa opção além do Tesouro.'});}
+  return s;
+}
+// Calcula quanto cada um paga em gastos conjuntos (divide ao meio)
+function calcularDivisao(cache){
+  // seções que têm campo "quem" e podem ser "conjunto"
+  const secoes=['domestico','lazer','emergencia','dogs'];
+  let pagouF=0,pagouC=0,deveF=0,deveC=0;
+  let conjuntoTotal=0;
+  const itensConjunto=[];
+  secoes.forEach(sec=>{
+    (cache[sec]||[]).forEach(g=>{
+      if(g.quem==='conjunto'||g.quem==='casal'){
+        const metade=g.valor/2;
+        conjuntoTotal+=g.valor;
+        itensConjunto.push({...g,_sec:sec,metade});
+        // quem pagou fisicamente não importa aqui — ambos devem metade
+        deveF+=metade;
+        deveC+=metade;
+      } else if(g.quem==='fabio'){
+        pagouF+=g.valor;
+      } else if(g.quem==='camila'){
+        pagouC+=g.valor;
+      }
+    });
+  });
+  return{deveF,deveC,conjuntoTotal,itensConjunto};
+}
+
+async function renderResumo(cache){
+  const renda=_rF+_rC;
+  const tFD=cache.fabio_diario.reduce((a,g)=>a+g.valor,0);
+  const tFP=cache.fabio_pessoal.reduce((a,g)=>a+g.valor,0);
+  const tCD=cache.camila_diario.reduce((a,g)=>a+g.valor,0);
+  const tCP=cache.camila_pessoal.reduce((a,g)=>a+g.valor,0);
+  const tDom=cache.domestico.reduce((a,g)=>a+g.valor,0);
+  const tLaz=cache.lazer.reduce((a,g)=>a+g.valor,0);
+  const tInv=cache.investimento.reduce((a,g)=>a+g.valor,0);
+  const tEmerg=cache.emergencia.reduce((a,g)=>a+g.valor,0);
+  const tDogs=cache.dogs.reduce((a,g)=>a+g.valor,0);
+  const total=tFD+tFP+tCD+tCP+tDom+tLaz+tInv+tEmerg+tDogs;
+  const saldo=renda-total;
+  const pct=renda>0?Math.min((total/renda)*100,100).toFixed(0):0;
+
+  // divisão conjunta
+  const {deveF,deveC,conjuntoTotal,itensConjunto}=calcularDivisao(cache);
+  // total que cada um arca = individual + metade dos conjuntos
+  const arcaF=tFD+tFP+deveF;
+  const arcaC=tCD+tCP+deveC;
+
+  document.getElementById('fraseMotiv').textContent=gerarFrase(parseFloat(pct));
+  document.getElementById('rn-renda').textContent=fmt(renda);
+  document.getElementById('rn-gasto').textContent=fmt(total);
+  document.getElementById('rn-saldo').textContent=fmt(saldo);
+  document.getElementById('rn-pf').textContent=fmt(arcaF);
+  document.getElementById('rn-pc').textContent=fmt(arcaC);
+  document.getElementById('rn-inv').textContent=fmt(tInv);
+  document.getElementById('saudePct').textContent=pct+'%';
+  const bar=document.getElementById('saudeBar');
+  bar.style.width=pct+'%';
+  bar.className='saude-bar-fill'+(pct>=90?' danger':pct>=75?' warn':'');
+
+  // dist doméstico
+  const DCATS={aluguel:'🏠 Aluguel',alimentacao:'🛒 Alimentação',internet:'📶 Internet',agua:'💧 Água',luz:'⚡ Luz',gas:'🔥 Gás',limpeza:'🧹 Limpeza',outros:'📦 Outros'};
+  document.getElementById('distDom').innerHTML=Object.entries(DCATS).map(([k,l])=>{const v=cache.domestico.filter(g=>g.cat===k).reduce((a,g)=>a+g.valor,0);return v?`<div class="dist-row"><span>${l}</span><span>${fmt(v)}</span></div>`:''}).join('')||'<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhum gasto doméstico</div>';
+  document.getElementById('distPes').innerHTML=`
+    <div class="dist-row"><span><span class="tag tag-f">Fábio</span> Individual</span><span>${fmt(tFD+tFP)}</span></div>
+    <div class="dist-row"><span><span class="tag tag-f">Fábio</span> +½ Conjunto</span><span>${fmt(deveF)}</span></div>
+    <div class="dist-row" style="font-weight:700"><span><span class="tag tag-f">Fábio</span> Total</span><span style="color:var(--fabio)">${fmt(arcaF)}</span></div>
+    <div class="dist-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:8px"><span><span class="tag tag-c">Camila</span> Individual</span><span>${fmt(tCD+tCP)}</span></div>
+    <div class="dist-row"><span><span class="tag tag-c">Camila</span> +½ Conjunto</span><span>${fmt(deveC)}</span></div>
+    <div class="dist-row" style="font-weight:700"><span><span class="tag tag-c">Camila</span> Total</span><span style="color:var(--camila)">${fmt(arcaC)}</span></div>`;
+
+  // BALANÇO DO CASAL
+  const balEl=document.getElementById('balancoCasalEl');
+  if(balEl){
+    if(itensConjunto.length===0){
+      balEl.innerHTML='<div class="vazio" style="padding:16px 0">Nenhum gasto conjunto este mês. Marque gastos como "Conjunto" para ver a divisão automática.</div>';
+    } else {
+      const SLABELS={domestico:'🏠 Doméstico',lazer:'🎡 Lazer',emergencia:'🚨 Emergência',dogs:'🐾 Dogs'};
+      const itensList=itensConjunto.map(g=>`
+        <div class="dist-row">
+          <span>${CAT_ICONS[g.cat||'outros']||'💼'} ${g.desc} <span style="font-size:.65rem;color:var(--muted)">${SLABELS[g._sec]||''}</span></span>
+          <span style="display:flex;gap:12px">
+            <span style="color:var(--fabio);font-family:'DM Mono',monospace;font-size:.78rem">${fmt(g.metade)}</span>
+            <span style="color:var(--camila);font-family:'DM Mono',monospace;font-size:.78rem">${fmt(g.metade)}</span>
+          </span>
+        </div>`).join('');
+      balEl.innerHTML=`
+        <div style="display:flex;justify-content:flex-end;gap:20px;font-size:.7rem;font-weight:700;margin-bottom:6px;padding-right:4px">
+          <span style="color:var(--fabio)">Fábio</span>
+          <span style="color:var(--camila)">Camila</span>
+        </div>
+        ${itensList}
+        <div class="dist-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:6px;padding-top:8px">
+          <span>Total conjunto (÷2 cada)</span>
+          <span style="display:flex;gap:12px">
+            <span style="color:var(--fabio);font-family:'DM Mono',monospace;font-size:.82rem">${fmt(deveF)}</span>
+            <span style="color:var(--camila);font-family:'DM Mono',monospace;font-size:.82rem">${fmt(deveC)}</span>
+          </span>
+        </div>`;
+    }
+  }
+
+  // sugestões
+  const re=await carregarReserva('emerg');
+  const rl=await carregarReserva('lazer');
+  const rd=await carregarReserva('dogs');
+  const sugs=gerarSugestoes(saldo,tInv,re);
+  document.getElementById('sugestoesEl').innerHTML=sugs.map(s=>`<div class="sugestao-card"><div class="si">${s.si}</div><div><span class="badge ${s.badge}">${s.bt}</span><h4>${s.titulo}</h4><p>${s.txt}</p></div></div>`).join('')||'<div class="vazio">Continue lançando para receber sugestões 💡</div>';
+
+  // termômetro
+  renderTermometro(cache,renda,total,tInv,re,rl,rd,tEmerg);
+
+  // lista geral — mostrar divisão nos itens conjuntos
+  const tipoLabel={fabio_diario:'👤 Fábio diário',fabio_pessoal:'👤 Fábio pessoal',camila_diario:'👩 Camila diário',camila_pessoal:'👩 Camila pessoal',domestico:'🏠 Doméstico',lazer:'🎡 Lazer',investimento:'📈 Investimento',emergencia:'🚨 Emergência',dogs:'🐾 Dogs'};
+  const corMap2={fabio_diario:'fabio',fabio_pessoal:'fabio',camila_diario:'camila',camila_pessoal:'camila',domestico:'casal',lazer:'lazer',investimento:'invest',emergencia:'emerg',dogs:'dogs'};
+  const todos=TIPOS.flatMap(t=>(cache[t]||[]).map(g=>({...g,_tipo:t,_cor:corMap2[t]}))).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  document.getElementById('listaGeral').innerHTML=todos.map(g=>{
+    const catV=g.cat||g.tipo||'outros';
+    const icon=CAT_ICONS[catV]||'💼';
+    const isConj=g.quem==='conjunto'||g.quem==='casal';
+    const splitTag=isConj?`<span style="font-size:.62rem;background:#2a7d4f15;color:var(--casal);font-weight:700;padding:1px 5px;border-radius:4px;margin-left:4px">÷2 cada: ${fmt(g.valor/2)}</span>`:'';
+    return`<div class="item"><div class="item-ic">${icon}</div><div class="item-info"><div class="item-nome">${g.desc}${splitTag}</div><div class="item-meta">${fmtD(g.data)} · ${tipoLabel[g._tipo]||''}${g.obs?' · '+g.obs:''}</div></div><div class="item-val ${g._cor}">${fmt(g.valor)}</div><button class="item-del" onclick="del('${g._tipo}',${g.id})">✕</button></div>`;
+  }).join('')||'<div class="vazio">Nenhum lançamento este mês</div>';
+}
+
+// MODAL
+function fecharModal(id){document.getElementById(id).classList.remove('aberto');}
+
+function confirmarSair(){
+  if(confirm('Deseja sair do app? Você precisará digitar a senha para entrar novamente.')){
+    sair();
+  }
+}
+function sair(){
+  document.getElementById('telaApp').style.display='none';
+  document.getElementById('telaLogin').style.display='flex';
+  document.getElementById('inputSenha').value='';
+  document.getElementById('loginErr').textContent='';
+  // fechar drawer se aberto
+  const dr=document.getElementById('drawerMenu');
+  const ov=document.getElementById('drawerOverlay');
+  if(dr)dr.classList.remove('aberto');
+  if(ov)ov.classList.remove('aberto');
+}
+function fecharOverlay(id,e){if(e.target===document.getElementById(id))fecharModal(id);}
+
+// ══════════════════════════════════════════
+// CATEGORIAS PERSONALIZADAS
+// ══════════════════════════════════════════
+let _catSelectId='';
+let _catSecao='';
+
+const EMOJIS_PADRAO={
+  'financiamento_casa':'🏠','financiamento_moto':'🏍️','netflix':'🎬','spotify':'🎵',
+  'gasolina':'⛽','outros':'💼','outros-p':'💼','outros-d':'📦'
+};
+
+async function carregarCatsCustom(secao){
+  const raw=await store.get('nd2_cats_'+secao)||'[]';
+  return JSON.parse(raw);
+}
+async function salvarCatsCustom(secao,cats){
+  await store.set('nd2_cats_'+secao,JSON.stringify(cats));
+}
+
+async function abrirModalCat(selectId,secao){
+  _catSelectId=selectId;
+  _catSecao=secao;
+  document.getElementById('catModalIcon').value='';
+  document.getElementById('catModalNome').value='';
+  await renderCatModalLista();
+  document.getElementById('overlayCat').classList.add('aberto');
+  document.getElementById('catModalNome').focus();
+}
+
+async function renderCatModalLista(){
+  const cats=await carregarCatsCustom(_catSecao);
+  const el=document.getElementById('catModalLista');
+  if(!cats.length){el.innerHTML='<span style="font-size:.76rem;color:var(--muted)">Nenhuma categoria personalizada ainda</span>';return;}
+  el.innerHTML=cats.map(c=>`<span class="cat-chip">${c.icon} ${c.nome}<button onclick="delCatCustom('${c.id}')">✕</button></span>`).join('');
+}
+
+async function salvarNovaCategoria(){
+  const icon=document.getElementById('catModalIcon').value.trim()||'📌';
+  const nome=document.getElementById('catModalNome').value.trim();
+  if(!nome){alert('Digite o nome da categoria!');return;}
+  const cats=await carregarCatsCustom(_catSecao);
+  const id='custom_'+Date.now();
+  cats.push({id,icon,nome});
+  await salvarCatsCustom(_catSecao,cats);
+  // add to select
+  const sel=document.getElementById(_catSelectId);
+  if(sel){
+    const opt=document.createElement('option');
+    opt.value=id;
+    opt.textContent=icon+' '+nome;
+    // insert before last option (Outros)
+    const outros=sel.querySelector('option[value="outros"]')||sel.querySelector('option:last-child');
+    if(outros)sel.insertBefore(opt,outros);
+    else sel.appendChild(opt);
+    sel.value=id;
+  }
+  // update CAT_ICONS
+  CAT_ICONS[id]=icon;
+  document.getElementById('catModalIcon').value='';
+  document.getElementById('catModalNome').value='';
+  await renderCatModalLista();
+}
+
+async function delCatCustom(id){
+  const cats=(await carregarCatsCustom(_catSecao)).filter(c=>c.id!==id);
+  await salvarCatsCustom(_catSecao,cats);
+  // remove from select
+  const sel=document.getElementById(_catSelectId);
+  if(sel){const opt=sel.querySelector(`option[value="${id}"]`);if(opt)opt.remove();}
+  delete CAT_ICONS[id];
+  await renderCatModalLista();
+}
+
+async function carregarTodasCatsCustom(){
+  const secoes=['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal','domestico','lazer','dogs'];
+  const selectMap={
+    fabio_diario:'fd-cat',fabio_pessoal:'fp-cat',
+    camila_diario:'cd-cat',camila_pessoal:'cp-cat',
+    domestico:'dom-cat',lazer:'laz-cat',dogs:'dogs-cat'
+  };
+  for(const sec of secoes){
+    const cats=await carregarCatsCustom(sec);
+    const sel=document.getElementById(selectMap[sec]);
+    if(!sel)continue;
+    cats.forEach(c=>{
+      if(!sel.querySelector(`option[value="${c.id}"]`)){
+        const opt=document.createElement('option');
+        opt.value=c.id;
+        opt.textContent=c.icon+' '+c.nome;
+        const outros=sel.querySelector('option[value="outros"]')||sel.querySelector('option:last-child');
+        if(outros)sel.insertBefore(opt,outros);
+        else sel.appendChild(opt);
+        CAT_ICONS[c.id]=c.icon;
+      }
+    });
+  }
+}
+
+// RENDER ALL
+async function renderAll(){
+  await carregarRendas();
+  const dados=await Promise.all(TIPOS.map(t=>carregar(t)));
+  window._cache={};
+  TIPOS.forEach((t,i)=>window._cache[t]=dados[i]);
+  TIPOS.forEach(t=>renderLista(t,window._cache[t]));
+  renderReceitas();
+  await renderResumo(window._cache);
+  await renderReservas();
+  await renderInvResumo();
+  await renderMetas();
+}
+
+// ══════════════════════════════════════════
+// CONTAS A VENCER
+// ══════════════════════════════════════════
+const CAT_CONTA_ICONS={financiamento:'🏍️',casa:'🏠',agua:'💧',luz:'⚡',internet:'📶',gas:'🔥',cartao:'💳',aluguel:'🏡',saude:'💊',outros:'📦'};
+
+async function addConta(){
+  const nome=document.getElementById('cv-nome').value.trim();
+  const valor=parseFloat(document.getElementById('cv-valor').value)||0;
+  const dia=parseInt(document.getElementById('cv-dia').value)||0;
+  const cat=document.getElementById('cv-cat').value;
+  const quem=document.getElementById('cv-quem').value;
+  const obs=document.getElementById('cv-obs').value.trim();
+  if(!nome||!valor||!dia||dia<1||dia>31){alert('Preencha nome, valor e dia de vencimento!');return;}
+  const raw=await store.get('nd2_contas')||'[]';
+  const contas=JSON.parse(raw);
+  contas.push({id:Date.now(),nome,valor,dia,cat,quem,obs,ativa:true});
+  await store.set('nd2_contas',JSON.stringify(contas));
+  document.getElementById('cv-nome').value='';
+  document.getElementById('cv-valor').value='';
+  document.getElementById('cv-dia').value='';
+  document.getElementById('cv-obs').value='';
+  await renderContas();
+}
+
+async function delConta(id){
+  if(!confirm('Remover esta conta?'))return;
+  const raw=await store.get('nd2_contas')||'[]';
+  const contas=JSON.parse(raw).filter(c=>c.id!==id);
+  await store.set('nd2_contas',JSON.stringify(contas));
+  await renderContas();
+}
+
+function diasParaVencer(dia){
+  const hoje=new Date();
+  const ano=hoje.getFullYear();
+  const mes=hoje.getMonth();
+  let venc=new Date(ano,mes,dia);
+  if(venc<hoje){venc=new Date(ano,mes+1,dia);}
+  const diff=Math.ceil((venc-hoje)/(1000*60*60*24));
+  return diff;
+}
+
+async function renderContas(){
+  const raw=await store.get('nd2_contas')||'[]';
+  const contas=JSON.parse(raw);
+  const el=document.getElementById('listaContas');
+  const alertEl=document.getElementById('alertaVencimentoEl');
+  if(!el)return;
+
+  if(!contas.length){
+    el.innerHTML='<div class="vazio">Nenhuma conta cadastrada ainda. Adicione suas contas acima! 📅</div>';
+    if(alertEl)alertEl.innerHTML='';
+    return;
+  }
+
+  // ordenar por dias para vencer
+  const comDias=contas.map(c=>({...c,dias:diasParaVencer(c.dia)}));
+  comDias.sort((a,b)=>a.dias-b.dias);
+
+  // alertas
+  const urgentes=comDias.filter(c=>c.dias<=3);
+  const vencendo=comDias.filter(c=>c.dias>3&&c.dias<=7);
+  if(alertEl){
+    let alertHtml='';
+    if(urgentes.length){
+      const nomes=urgentes.map(c=>`${CAT_CONTA_ICONS[c.cat]||'📦'} ${c.nome}`).join(', ');
+      alertHtml+=`<div class="alerta-banner"><div class="ab-icon">🚨</div><div><h4>${urgentes.length} conta(s) vencendo em até 3 dias!</h4><p>${nomes}</p></div></div>`;
+    }
+    if(vencendo.length){
+      const nomes=vencendo.map(c=>`${CAT_CONTA_ICONS[c.cat]||'📦'} ${c.nome}`).join(', ');
+      alertHtml+=`<div class="alerta-banner" style="background:linear-gradient(135deg,var(--warn),#b45309)"><div class="ab-icon">⚠️</div><div><h4>${vencendo.length} conta(s) vencendo esta semana</h4><p>${nomes}</p></div></div>`;
+    }
+    alertEl.innerHTML=alertHtml;
+  }
+
+  const QNAMES={casal:'Casal',fabio:'Fábio',camila:'Camila'};
+  el.innerHTML=comDias.map(c=>{
+    const icon=CAT_CONTA_ICONS[c.cat]||'📦';
+    let status,badgeCls,cardCls,icCls;
+    if(c.dias<=0){status='VENCIDA';badgeCls='badge-vencida';cardCls='vencida';icCls='vencida';}
+    else if(c.dias<=3){status=`Vence em ${c.dias} dia(s)`;badgeCls='badge-vencendo';cardCls='vencendo';icCls='vencendo';}
+    else if(c.dias<=7){status=`Vence em ${c.dias} dias`;badgeCls='badge-vencendo';cardCls='vencendo';icCls='vencendo';}
+    else{status=`Dia ${c.dia} — ${c.dias} dias`;badgeCls='badge-ok';cardCls='ok';icCls='ok';}
+    return`<div class="conta-card ${cardCls}">
+      <div class="conta-ic ${icCls}">${icon}</div>
+      <div class="conta-info">
+        <div class="conta-nome">${c.nome}</div>
+        <div class="conta-meta">${QNAMES[c.quem]||c.quem}${c.obs?' · '+c.obs:''}</div>
+      </div>
+      <div class="conta-right">
+        <div class="conta-valor">${fmt(c.valor)}</div>
+        <span class="conta-badge ${badgeCls}">${status}</span>
+      </div>
+      <button class="item-del" onclick="delConta(${c.id})" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+
+  // agendar notificações
+  agendarNotificacoes(comDias);
+}
+
+// ══════════════════════════════════════════
+// NOTIFICAÇÕES
+// ══════════════════════════════════════════
+function renderNotifBanner(){
+  const el=document.getElementById('notifBannerEl');
+  if(!el)return;
+  if(!('Notification' in window)){
+    el.innerHTML='<div class="dica-mes" style="border-color:#dc262630;background:#dc262608"><div class="di">⚠️</div><div><h4 style="color:var(--emerg)">Notificações não suportadas</h4><p>Seu navegador não suporta notificações. Tente abrir o app no Chrome.</p></div></div>';
+    return;
+  }
+  if(Notification.permission==='granted'){
+    el.innerHTML='<div class="dica-mes"><div class="di">✅</div><div><h4>Notificações ativas!</h4><p>Vocês receberão alertas automáticos quando as contas estiverem perto do vencimento.</p></div></div>';
+    return;
+  }
+  if(Notification.permission==='denied'){
+    el.innerHTML='<div class="dica-mes" style="border-color:#dc262630;background:#dc262608"><div class="di">🔕</div><div><h4 style="color:var(--emerg)">Notificações bloqueadas</h4><p>Vá nas configurações do navegador e permita notificações para este site.</p></div></div>';
+    return;
+  }
+  el.innerHTML=`<div class="notif-banner" onclick="pedirPermissaoNotif()">
+    <div class="nb-icon">🔔</div>
+    <div style="flex:1"><h4>Ativar notificações no celular</h4><p>Receba alertas automáticos de vencimento — mesmo com o app fechado</p></div>
+    <button class="nb-btn">Ativar agora</button>
+  </div>`;
+}
+
+async function pedirPermissaoNotif(){
+  const perm=await Notification.requestPermission();
+  renderNotifBanner();
+  if(perm==='granted'){
+    new Notification('Nós Dois 💑',{body:'Notificações ativadas! Vocês serão avisados sobre contas a vencer.',icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%232a7d4f"/><text y=".7em" font-size="60" text-anchor="middle" x="50">💑</text></svg>'});
+    await renderContas();
+  }
+}
+
+function agendarNotificacoes(contas){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  contas.forEach(c=>{
+    if(c.dias===1){
+      setTimeout(()=>{
+        new Notification(`⚠️ ${c.nome} vence amanhã!`,{
+          body:`Valor: ${fmt(c.valor)} — não esqueçam de pagar!`,
+          icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%232a7d4f"/><text y=".7em" font-size="60" text-anchor="middle" x="50">💑</text></svg>',
+          tag:`conta-${c.id}`
+        });
+      },1000);
+    } else if(c.dias===3){
+      setTimeout(()=>{
+        new Notification(`📅 ${c.nome} vence em 3 dias`,{
+          body:`Valor: ${fmt(c.valor)} — dia ${c.dia}`,
+          tag:`conta-${c.id}-3d`
+        });
+      },2000);
+    }
+  });
+}
+
+// verificar contas ao abrir o app
+async function verificarContasAoAbrir(){
+  const raw=await store.get('nd2_contas')||'[]';
+  const contas=JSON.parse(raw);
+  if(!contas.length)return;
+  const urgentes=contas.filter(c=>diasParaVencer(c.dia)<=3);
+  if(urgentes.length&&'Notification' in window&&Notification.permission==='granted'){
+    const nomes=urgentes.map(c=>c.nome).join(', ');
+    new Notification(`🚨 ${urgentes.length} conta(s) vencendo em breve!`,{
+      body:nomes,
+      tag:'contas-urgentes'
+    });
+  }
+}
+
+// ══════════════════════════════════════════
+// PWA SERVICE WORKER
+// ══════════════════════════════════════════
+function registrarServiceWorker(){
+  if('serviceWorker' in navigator){
+    const swCode=`
+self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>clients.claim());
+self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));
+`;
+    const blob=new Blob([swCode],{type:'application/javascript'});
+    const swUrl=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  }
+}
+
+// VOZ
+let _vozRec=null,_vozAtivo=false,_vozPrefixo='';
+function toggleVoz(prefixo){
+  if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){alert('Use o Chrome no Android para reconhecimento de voz.');return;}
+  if(_vozAtivo&&_vozPrefixo===prefixo){_vozRec&&_vozRec.stop();return;}
+  _vozPrefixo=prefixo;_vozAtivo=true;
+  const btn=document.getElementById('btn-voz-'+prefixo);
+  const status=document.getElementById('voz-status-'+prefixo);
+  const wrap=document.getElementById('voz-wrap-'+prefixo);
+  btn.className='btn-voz ouvindo';btn.textContent='⏹️';
+  status.textContent='Ouvindo... fale o gasto!';wrap.classList.add('ouvindo');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  _vozRec=new SR();_vozRec.lang='pt-BR';_vozRec.continuous=false;_vozRec.interimResults=false;
+  _vozRec.onresult=e=>{
+    const texto=e.results[0][0].transcript;
+    btn.className='btn-voz processando';btn.textContent='⚙️';
+    status.textContent='Processando: "'+texto+'"';wrap.classList.remove('ouvindo');
+    // extrair valor
+    const nums=texto.match(/\d+[,.]?\d*/g)||[];
+    let valor=nums.length?nums[nums.length-1].replace(',','.') :'';
+    let desc=texto.replace(/\d+[,.]?\d*/g,'').replace(/reais?|real|r\$|pila|conto/gi,'').replace(/\s+/g,' ').trim();
+    desc=desc.charAt(0).toUpperCase()+desc.slice(1);
+    const dEl=document.getElementById(prefixo+'-desc');
+    const vEl=document.getElementById(prefixo+'-val');
+    if(dEl&&desc)dEl.value=desc;
+    if(vEl&&valor)vEl.value=valor;
+    btn.className='btn-voz idle';btn.textContent='🎤';
+    status.textContent=desc&&valor?'✅ "'+desc+'" — R$'+valor+' — confira e clique em Adicionar':desc?'✅ "'+desc+'" — adicione o valor':'⚠️ Não entendi. Corrija os campos.';
+    setTimeout(()=>{status.textContent='Toque no microfone e fale o gasto';},4000);
+    _vozAtivo=false;
+  };
+  _vozRec.onerror=()=>{
+    _vozAtivo=false;btn.className='btn-voz idle';btn.textContent='🎤';
+    wrap.classList.remove('ouvindo');status.textContent='Erro. Tente novamente.';
+  };
+  _vozRec.start();
+}
+
+// RELATÓRIO
+async function renderRelatorio(){
+  const cache=window._cache;if(!cache)return;
+  const renda=_rF+_rC;
+  const tFD=cache.fabio_diario.reduce((a,g)=>a+g.valor,0);
+  const tFP=cache.fabio_pessoal.reduce((a,g)=>a+g.valor,0);
+  const tCD=cache.camila_diario.reduce((a,g)=>a+g.valor,0);
+  const tCP=cache.camila_pessoal.reduce((a,g)=>a+g.valor,0);
+  const tDom=cache.domestico.reduce((a,g)=>a+g.valor,0);
+  const tLaz=cache.lazer.reduce((a,g)=>a+g.valor,0);
+  const tInv=cache.investimento.reduce((a,g)=>a+g.valor,0);
+  const tEmerg=cache.emergencia.reduce((a,g)=>a+g.valor,0);
+  const tDogs=cache.dogs.reduce((a,g)=>a+g.valor,0);
+  const total=tFD+tFP+tCD+tCP+tDom+tLaz+tInv+tEmerg+tDogs;
+  const saldo=renda-total;
+  const conj=(tDom+tLaz+tEmerg+tDogs)/2;
+  const arcaF=tFD+tFP+conj,arcaC=tCD+tCP+conj;
+  const pEl=document.getElementById('rel-periodo');
+  if(pEl)pEl.textContent=MESES[mes]+' de '+ano+' — gerado em '+new Date().toLocaleDateString('pt-BR');
+  const grid=document.getElementById('relGridEl');
+  if(grid)grid.innerHTML=`
+    <div class="rel-card"><div class="rl">Renda Total</div><div class="rv" style="color:var(--casal)">${fmt(renda)}</div></div>
+    <div class="rel-card"><div class="rl">Total Gasto</div><div class="rv" style="color:var(--emerg)">${fmt(total)}</div></div>
+    <div class="rel-card"><div class="rl">Saldo</div><div class="rv" style="color:${saldo>=0?'var(--casal)':'var(--emerg)'}">${fmt(saldo)}</div></div>
+    <div class="rel-card"><div class="rl">Investido</div><div class="rv" style="color:var(--invest)">${fmt(tInv)}</div></div>
+    <div class="rel-card"><div class="rl">% Comprometido</div><div class="rv">${renda>0?(total/renda*100).toFixed(0):0}%</div></div>
+    <div class="rel-card"><div class="rl">Lançamentos</div><div class="rv">${Object.values(cache).flat().length}</div></div>`;
+  const cmp=document.getElementById('relCompareEl');
+  if(cmp)cmp.innerHTML=`
+    <div class="rel-card"><div class="rl" style="color:var(--fabio)">👤 Fábio Padote</div><div class="rv" style="color:var(--fabio);margin-bottom:6px">${fmt(arcaF)}</div><div style="font-size:.73rem;color:var(--muted)">Diário: ${fmt(tFD)}<br>Pessoal: ${fmt(tFP)}<br>½ Conjunto: ${fmt(conj)}</div></div>
+    <div class="rel-card"><div class="rl" style="color:var(--camila)">👩 Camila Pâmela</div><div class="rv" style="color:var(--camila);margin-bottom:6px">${fmt(arcaC)}</div><div style="font-size:.73rem;color:var(--muted)">Diário: ${fmt(tCD)}<br>Pessoal: ${fmt(tCP)}<br>½ Conjunto: ${fmt(conj)}</div></div>`;
+  const maxV=Math.max(tFD+tFP,tCD+tCP,tDom,tLaz,tInv,1);
+  const bar=(l,v,c)=>`<div class="rel-bar-wrap"><div class="rel-bar-label"><span>${l}</span><span style="font-family:'DM Mono',monospace">${fmt(v)}</span></div><div class="rel-bar-track"><div class="rel-bar-fill" style="width:${(v/maxV*100).toFixed(0)}%;background:${c}"></div></div></div>`;
+  const DCATS={aluguel:'🏠 Aluguel',financiamento_casa:'🏦 Financ.Casa',financiamento_moto:'🏍️ Financ.Moto',alimentacao:'🛒 Alimentação',internet:'📶 Internet',agua:'💧 Água',luz:'⚡ Luz',gas:'🔥 Gás',limpeza:'🧹 Limpeza',outros:'📦 Outros'};
+  const domRows=Object.entries(DCATS).map(([k,l])=>{const v=cache.domestico.filter(g=>g.cat===k).reduce((a,g)=>a+g.valor,0);return v?`<div class="rel-row"><span>${l}</span><span>${fmt(v)}</span></div>`:''}).join('');
+  const conteudo=document.getElementById('relConteudoEl');
+  if(conteudo)conteudo.innerHTML=`
+    <div class="rel-section"><h3>📊 Distribuição</h3>
+      ${bar('👤 Fábio',tFD+tFP,'var(--fabio)')}${bar('👩 Camila',tCD+tCP,'var(--camila)')}
+      ${bar('🏠 Doméstico',tDom,'var(--casal)')}${bar('🎡 Lazer',tLaz,'var(--lazer)')}
+      ${bar('📈 Investimentos',tInv,'var(--invest)')}${bar('🚨 Emergência',tEmerg,'var(--emerg)')}${bar('🐾 Dogs',tDogs,'var(--dogs)')}
+    </div>
+    <div class="rel-section"><h3>🏠 Doméstico detalhado</h3>${domRows||'<div style="font-size:.8rem;color:var(--muted)">Nenhum gasto</div>'}
+      <div class="rel-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:4px;padding-top:8px"><span>Total</span><span>${fmt(tDom)}</span></div></div>
+    <div class="rel-section"><h3>💡 Análise</h3>
+      ${renda>0?`<div class="rel-row"><span>Taxa de poupança</span><span style="color:${saldo>=0?'var(--casal)':'var(--emerg)'}">${(saldo/renda*100).toFixed(1)}%</span></div>`:''}
+      <div class="rel-row"><span>Taxa de investimento</span><span style="color:var(--invest)">${renda>0?(tInv/renda*100).toFixed(1):0}%</span></div>
+      <div class="rel-row"><span>Meta 10% investimento</span><span style="color:${tInv>=renda*0.1?'var(--casal)':'var(--warn)'}">${tInv>=renda*0.1?'✅ Atingida':'⚠️ Faltam '+fmt(renda*0.1-tInv)}</span></div>
+    </div>`;
+}
+
+async function exportarRelatorio(){
+  const cache=window._cache;if(!cache)return;
+  const renda=_rF+_rC;
+  const t={fd:cache.fabio_diario,fp:cache.fabio_pessoal,cd:cache.camila_diario,cp:cache.camila_pessoal,dom:cache.domestico,laz:cache.lazer,inv:cache.investimento,emerg:cache.emergencia,dogs:cache.dogs};
+  const s=k=>t[k].reduce((a,g)=>a+g.valor,0);
+  const total=Object.keys(t).reduce((a,k)=>a+s(k),0);
+  const txt='📊 RELATÓRIO — '+MESES[mes].toUpperCase()+' '+ano+'
+'+'═'.repeat(35)+'
+
+💰 RECEITAS
+  Fábio Padote:   '+fmt(_rF)+'
+  Camila Pâmela:  '+fmt(_rC)+'
+  Total:          '+fmt(renda)+'
+
+💸 GASTOS
+  👤 Fábio diário:    '+fmt(s('fd'))+'
+  👤 Fábio pessoal:   '+fmt(s('fp'))+'
+  👩 Camila diário:   '+fmt(s('cd'))+'
+  👩 Camila pessoal:  '+fmt(s('cp'))+'
+  🏠 Doméstico:       '+fmt(s('dom'))+'
+  🎡 Lazer:           '+fmt(s('laz'))+'
+  📈 Investimentos:   '+fmt(s('inv'))+'
+  🚨 Emergência:      '+fmt(s('emerg'))+'
+  🐾 Dogs:            '+fmt(s('dogs'))+'
+  '+'─'.repeat(28)+'
+  TOTAL: '+fmt(total)+'
+
+💚 SALDO: '+fmt(renda-total)+'
+📈 % Investido: '+(renda>0?(s('inv')/renda*100).toFixed(1):0)+'%
+
+Gerado — App Nós Dois 💑';
+  try{await navigator.clipboard.writeText(txt);}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+  alert('✅ Relatório copiado! Cole no WhatsApp ou e-mail.');
+}
+
+// MURAL
+const MURAL_KEY='nd2_mural_notas';
+async function enviarNota(){
+  const msg=document.getElementById('muralMsg').value.trim();
+  const quem=document.getElementById('muralQuem').value;
+  if(!msg){alert('Digite uma mensagem!');return;}
+  const raw=await store.get(MURAL_KEY);
+  const notas=raw?JSON.parse(raw):[];
+  notas.unshift({id:Date.now(),msg,quem,hora:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),lida:false});
+  await store.set(MURAL_KEY,JSON.stringify(notas));
+  document.getElementById('muralMsg').value='';
+  if('Notification'in window&&Notification.permission==='granted'){new Notification('📝 Nova nota de '+(quem==='fabio'?'Fábio':'Camila')+'!',{body:msg.length>60?msg.substring(0,60)+'...':msg,tag:'mural-nota'});}
+  await renderMural();
+}
+function notaRapida(texto){document.getElementById('muralMsg').value=texto;document.getElementById('muralMsg').focus();}
+async function carregarNotas(){const raw=await store.get(MURAL_KEY);return raw?JSON.parse(raw):[];}
+async function limparNotas(){if(!confirm('Apagar todo o histórico?'))return;await store.set(MURAL_KEY,'[]');await renderMural();}
+async function delNota(id){const notas=(await carregarNotas()).filter(n=>n.id!==id);await store.set(MURAL_KEY,JSON.stringify(notas));await renderMural();}
+async function renderMural(){
+  const notas=await carregarNotas();
+  const listEl=document.getElementById('listaMural');
+  const alertEl=document.getElementById('muralAlertaEl');
+  const badge=document.getElementById('muralBadge');
+  const naoLidas=notas.filter(n=>!n.lida);
+  if(badge){badge.style.display=naoLidas.length?'inline':'none';badge.textContent=naoLidas.length;}
+  if(alertEl){alertEl.innerHTML=naoLidas.length?`<div class="alerta-banner" style="background:linear-gradient(135deg,var(--casal),#1b5e38);margin-bottom:16px"><div class="ab-icon">📝</div><div><h4>${naoLidas.length} nota(s) não lida(s)</h4><p>${naoLidas[0].quem==='fabio'?'Fábio':'Camila'}: "${naoLidas[0].msg.substring(0,50)}"</p></div></div>`:'';}
+  if(!notas.length){if(listEl)listEl.innerHTML='<div class="vazio">Nenhuma nota ainda. Deixem recados um para o outro! 📝</div>';return;}
+  if(listEl){listEl.innerHTML=notas.map(n=>{const isF=n.quem==='fabio';const cor=isF?'var(--fabio)':'var(--camila)';const cls=isF?'fabio-nota':'camila-nota';return`<div class="mural-nota ${cls} ${!n.lida?'nao-lida':''}"><div class="mural-top"><div class="mural-autor" style="color:${cor}">${isF?'👤 Fábio':'👩 Camila'}</div><div style="display:flex;align-items:center;gap:8px"><span class="mural-hora">${n.hora}</span><button class="item-del" onclick="delNota(${n.id})">✕</button></div></div><div class="mural-msg">${n.msg}</div><div style="font-size:.65rem;font-weight:700;margin-top:4px;color:${n.lida?'var(--casal)':'var(--warn)'}">${n.lida?'✅ Lida':'🔵 Não lida'}</div></div>`;}).join('');}
+  setTimeout(async()=>{const todas=await carregarNotas();await store.set(MURAL_KEY,JSON.stringify(todas.map(n=>({...n,lida:true}))));const b=document.getElementById('muralBadge');if(b)b.style.display='none';},2000);
+}
+async function verificarMuralAoAbrir(){
+  const notas=await carregarNotas();
+  const naoLidas=notas.filter(n=>!n.lida);
+  const badge=document.getElementById('muralBadge');
+  if(badge&&naoLidas.length){badge.style.display='inline';badge.textContent=naoLidas.length;}
+  if(naoLidas.length&&'Notification'in window&&Notification.permission==='granted'){new Notification('📝 '+naoLidas.length+' nota(s) não lida(s)!',{body:(naoLidas[0].quem==='fabio'?'Fábio':'Camila')+': '+naoLidas[0].msg.substring(0,60),tag:'mural-abertura'});}
+}
+
+// FONTES DE RENDA
+async function carregarFontes(pessoa){const r=await store.get(chaveG('fontes_'+pessoa));return r?JSON.parse(r):[];}
+async function salvarFontes(pessoa,d){await store.set(chaveG('fontes_'+pessoa),JSON.stringify(d));}
+async function addFonte(pessoa){
+  const p=pessoa==='fabio'?'frf':'frc';
+  const desc=document.getElementById(p+'-desc').value.trim();
+  const val=parseFloat(document.getElementById(p+'-val').value)||0;
+  const tipo=document.getElementById(p+'-tipo').value;
+  if(!desc||!val){alert('Preencha descrição e valor!');return;}
+  const fontes=await carregarFontes(pessoa);
+  fontes.push({id:Date.now(),desc,val,tipo});
+  await salvarFontes(pessoa,fontes);
+  document.getElementById(p+'-desc').value='';
+  document.getElementById(p+'-val').value='';
+  await renderFontes();
+}
+async function delFonte(pessoa,id){
+  const f=(await carregarFontes(pessoa)).filter(x=>x.id!==id);
+  await salvarFontes(pessoa,f);
+  await renderFontes();
+}
+async function renderFontes(){
+  const [ff,fc]=await Promise.all([carregarFontes('fabio'),carregarFontes('camila')]);
+  const totalF=ff.reduce((a,f)=>a+f.val,0);
+  const totalC=fc.reduce((a,f)=>a+f.val,0);
+  const total=totalF+totalC;
+  const fixaF=ff.filter(f=>f.tipo==='fixa').reduce((a,f)=>a+f.val,0);
+  const fixaC=fc.filter(f=>f.tipo==='fixa').reduce((a,f)=>a+f.val,0);
+  const renderList=(fontes,pessoa,el)=>{
+    const div=document.getElementById(el);if(!div)return;
+    if(!fontes.length){div.innerHTML='<div class="vazio" style="padding:12px 0">Nenhuma fonte cadastrada</div>';return;}
+    div.innerHTML=fontes.map(f=>`<div class="item" style="margin-bottom:6px"><div class="item-ic">${f.tipo==='fixa'?'🔒':'📈'}</div><div class="item-info"><div class="item-nome">${f.desc}</div><div class="item-meta">${f.tipo==='fixa'?'Fixa':'Variável'}</div></div><div class="item-val ${pessoa}" style="color:var(--${pessoa})">${fmt(f.val)}</div><button class="item-del" onclick="delFonte('${pessoa}',${f.id})">✕</button></div>`).join('');
+  };
+  renderList(ff,'fabio','lista-fontes-fabio');
+  renderList(fc,'camila','lista-fontes-camila');
+  const tf=document.getElementById('total-fontes-fabio');if(tf)tf.textContent=fmt(totalF);
+  const tc=document.getElementById('total-fontes-camila');if(tc)tc.textContent=fmt(totalC);
+  const tt=document.getElementById('total-fontes-casal');if(tt)tt.textContent=fmt(total);
+  const comp=document.getElementById('fontes-composicao');
+  if(comp)comp.innerHTML=total>0?`Fixa garantida: <strong style="color:var(--casal)">${fmt(fixaF+fixaC)}</strong> · Variável: <strong style="color:var(--warn)">${fmt(total-fixaF-fixaC)}</strong>`:'';
+}
+
+// GASTOS RECORRENTES
+async function carregarRecorrentes(){const r=await store.get(chaveG('recorrentes'));return r?JSON.parse(r):[];}
+async function addRecorrente(){
+  const desc=document.getElementById('rec-desc').value.trim();
+  const val=parseFloat(document.getElementById('rec-val').value)||0;
+  const cat=document.getElementById('rec-cat').value;
+  const secao=document.getElementById('rec-secao').value;
+  const inicio=document.getElementById('rec-inicio').value;
+  const meses=parseInt(document.getElementById('rec-meses').value)||0;
+  const dia=parseInt(document.getElementById('rec-dia').value)||1;
+  const obs=document.getElementById('rec-obs').value.trim();
+  if(!desc||!val||!inicio){alert('Preencha descrição, valor e início!');return;}
+  const recs=await carregarRecorrentes();
+  recs.push({id:Date.now(),desc,val,cat,secao,inicio,meses,dia,obs,ativo:true});
+  await store.set(chaveG('recorrentes'),JSON.stringify(recs));
+  ['rec-desc','rec-val','rec-obs','rec-dia'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  await renderRecorrentes();
+  await aplicarRecorrentesNoMes();
+}
+async function delRecorrente(id){
+  const r=(await carregarRecorrentes()).filter(x=>x.id!==id);
+  await store.set(chaveG('recorrentes'),JSON.stringify(r));
+  await renderRecorrentes();
+}
+function recorrenteAtivo(rec){
+  if(!rec.ativo)return false;
+  const[aI,mI]=rec.inicio.split('-').map(Number);
+  const inicioMes=aI*12+mI-1;
+  const atualMes=ano*12+mes;
+  if(atualMes<inicioMes)return false;
+  if(rec.meses>0&&atualMes>inicioMes+rec.meses-1)return false;
+  return true;
+}
+function parcelaAtual(rec){
+  const[aI,mI]=rec.inicio.split('-').map(Number);
+  const inicioMes=aI*12+mI-1;
+  const atualMes=ano*12+mes;
+  return atualMes-inicioMes+1;
+}
+async function aplicarRecorrentesNoMes(){
+  const recs=await carregarRecorrentes();
+  const ativos=recs.filter(r=>recorrenteAtivo(r));
+  for(const r of ativos){
+    const dados=await carregar(r.secao);
+    const parcela=parcelaAtual(r);
+    const jaExiste=dados.some(g=>g._recId===r.id&&g.data&&g.data.startsWith(ano+'-'+String(mes+1).padStart(2,'0')));
+    if(!jaExiste){
+      const obsStr=r.meses>0?`Parcela ${parcela}/${r.meses}`:(r.obs||'Recorrente');
+      dados.push({id:Date.now()+Math.random(),desc:r.desc,valor:r.val,cat:r.cat,pag:'debito',data:ano+'-'+String(mes+1).padStart(2,'0')+'-'+String(r.dia).padStart(2,'0'),obs:obsStr,quem:'conjunto',_recId:r.id});
+      await salvar(r.secao,dados);
+    }
+  }
+}
+async function renderRecorrentes(){
+  const recs=await carregarRecorrentes();
+  const el=document.getElementById('lista-recorrentes');
+  const compEl=document.getElementById('compromissos-fixos');
+  const CAT_IC2={financiamento:'🏍️',financiamento_casa:'🏠',assinatura:'📱',internet:'📶',agua:'💧',luz:'⚡',gas:'🔥',aluguel:'🏡',saude:'💊',educacao:'📚',outros:'💼'};
+  const SECOES={domestico:'🏠 Doméstico',fabio_pessoal:'👤 Fábio',camila_pessoal:'👩 Camila'};
+  const ativos=recs.filter(r=>recorrenteAtivo(r));
+  const totalFixo=ativos.reduce((a,r)=>a+r.val,0);
+  if(compEl&&totalFixo>0){
+    compEl.innerHTML=`<div class="form-box" style="background:#dc262608;border-color:#dc262630">
+      <div class="form-tit"><span class="bar" style="background:var(--emerg)"></span>⚠️ Compromissos fixos este mês</div>
+      <div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--emerg);margin-bottom:8px">${fmt(totalFixo)}</div>
+      <div style="font-size:.76rem;color:var(--muted)">${ativos.length} gasto(s) recorrente(s) ativo(s) — já lançados automaticamente neste mês</div>
+    </div>`;
+  } else if(compEl){compEl.innerHTML='';}
+  if(!recs.length){if(el)el.innerHTML='<div class="vazio">Nenhum gasto recorrente cadastrado ainda. Adicione acima! 🔄</div>';return;}
+  if(el)el.innerHTML=recs.map(r=>{
+    const ativo=recorrenteAtivo(r);
+    const parc=ativo?parcelaAtual(r):'-';
+    const total=r.meses>0?`${parc}/${r.meses}`:`${parc}/∞`;
+    return`<div class="item" style="${!ativo?'opacity:.5':''}"><div class="item-ic">${CAT_IC2[r.cat]||'💼'}</div><div class="item-info"><div class="item-nome">${r.desc} <span style="font-size:.65rem;background:${ativo?'#2a7d4f20':'#dc262620'};color:${ativo?'var(--casal)':'var(--emerg)'};padding:1px 6px;border-radius:4px;font-weight:700">${ativo?'ATIVO':'INATIVO'}</span></div><div class="item-meta">${SECOES[r.secao]||r.secao} · Parcela ${total} · Dia ${r.dia}${r.obs?' · '+r.obs:''}</div></div><div class="item-val casal">${fmt(r.val)}/mês</div><button class="item-del" onclick="delRecorrente(${r.id})">✕</button></div>`;
+  }).join('');
+}
+
+// INIT
+async function init(){
+  document.getElementById('labelMes').textContent=`${MESES[mes]} ${ano}`;
+  const dateFields=['fd-data','fp-data','cd-data','cp-data','dom-data','laz-data','inv-data','emerg-data','dogs-data'];
+  dateFields.forEach(id=>{const el=document.getElementById(id);if(el)el.value=hoje();});
+  bindFiltros();
+  await carregarPorques();
+  await carregarTodasCatsCustom();
+  await aplicarRecorrentesNoMes();
+  await renderAll();
+  await renderFontes();
+  await renderRecorrentes();
+  await renderContas();
+  await renderMural();
+  await verificarMuralAoAbrir();
+  renderNotifBanner();
+  registrarServiceWorker();
+  await verificarContasAoAbrir();
+}
+</script>
+</body>
+</html>
