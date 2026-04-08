@@ -4,28 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nós Dois — Finanças do Casal</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-(function(){
-  try {
-    var cfg = {
-      apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
-      authDomain: "nosdois-financas.firebaseapp.com",
-      projectId: "nosdois-financas",
-      storageBucket: "nosdois-financas.firebasestorage.app",
-      messagingSenderId: "141934571983",
-      appId: "1:141934571983:web:8288980a9eba25df6f22ba"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    window._db = firebase.firestore();
-    console.log('Firebase OK');
-  } catch(e) {
-    console.warn('Firebase indisponivel, usando localStorage:', e.message);
-    window._db = null;
-  }
-})();
-</script>
+
 <meta name="theme-color" content="#2a7d4f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -407,6 +386,30 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 </style>
 </head>
 <body>
+<script>
+var vendo=false;
+function verSenha(){
+  var i=document.getElementById('inputSenha');
+  var b=document.getElementById('btnOlho');
+  vendo=!vendo;
+  i.type=vendo?'text':'password';
+  b.textContent=vendo?'Ocultar':'Mostrar';
+}
+function logar(){
+  var v=document.getElementById('inputSenha').value;
+  var e=document.getElementById('loginErr');
+  if(v==='Mus@s2026'){
+    document.getElementById('telaLogin').style.display='none';
+    document.getElementById('telaApp').style.display='block';
+    if(typeof init==='function')init();
+  }else if(v===''){
+    if(e)e.textContent='Digite a senha!';
+  }else{
+    if(e)e.textContent='Senha incorreta. Tente novamente.';
+    document.getElementById('inputSenha').value='';
+  }
+}
+</script>
 
 <!-- LOGIN -->
 <div id="telaLogin">
@@ -414,8 +417,11 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
     <div class="login-hearts">💑</div>
     <div class="login-title">Nós Dois</div>
     <div class="login-sub">Finanças do casal — acesso exclusivo</div>
-    <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30"/>
-    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
+    <div style="position:relative;margin-bottom:14px">
+      <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30" style="margin-bottom:0;padding-right:50px"/>
+      <button onclick="verSenha()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.1rem;" id="btnOlho">👁️</button>
+    </div>
+    <button class="login-btn" onclick="logar()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -463,7 +469,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
 <div class="content">
 
-<!-- ══ EDUCAÇÃO ══ -->
+<!-- == EDUCAÇÃO == -->
 <section class="secao ativa" id="sec-educacao">
   <div class="edu-hero">
     <h1>Crescer juntos começa aqui</h1>
@@ -534,7 +540,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </section>
 
-<!-- ══ RESUMO ══ -->
+<!-- == RESUMO == -->
 <section class="secao" id="sec-resumo">
   <div class="resumo-hero">
     <div class="frase-motivacional" id="fraseMotiv">Carregando...</div>
@@ -584,7 +590,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="lista" id="listaGeral"></div>
 </section>
 
-<!-- ══ FONTES DE RENDA ══ -->
+<!-- == FONTES DE RENDA == -->
 <section class="secao" id="sec-fontes">
   <div class="page-header"><h2>Fontes de Renda</h2><p>De onde vem o dinheiro de cada um</p></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
@@ -627,7 +633,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="dica-mes"><div class="di">💡</div><div><h4>Renda fixa vs variável</h4><p>A renda fixa é garantida todo mês — seu CLT, aluguel recebido. A variável vem de bicos, freelances. Planejem os gastos fixos sempre com base na renda fixa — a variável é bônus para investir ou guardar.</p></div></div>
 </section>
 
-<!-- ══ GASTOS RECORRENTES ══ -->
+<!-- == GASTOS RECORRENTES == -->
 <section class="secao" id="sec-recorrentes">
   <div class="page-header"><h2>Gastos Recorrentes</h2><p>Cadastre uma vez — aparece automaticamente todo mês</p></div>
   <div class="form-box">
@@ -669,7 +675,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div id="lista-recorrentes"></div>
 </section>
 
-<!-- ══ RECEITAS ══ -->
+<!-- == RECEITAS == -->
 <section class="secao" id="sec-receitas">
   <div class="page-header"><h2>Receitas do mês</h2><p>Renda individual e contribuição para o doméstico</p></div>
   <div class="renda-grid">
@@ -693,7 +699,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="dica-mes"><div class="di">⚖️</div><div><h4>Divisão proporcional justa</h4><p>Uma boa prática é cada um contribuir proporcionalmente à sua renda. Se Fábio ganha 60% da renda total, contribui com 60% das despesas domésticas. Justo para os dois, independente do salário.</p></div></div>
 </section>
 
-<!-- ══ FÁBIO ══ -->
+<!-- == FÁBIO == -->
 <section class="secao sec-fabio" id="sec-fabio">
   <div class="page-header"><h2>Área do Fábio Padote</h2><p>Gastos diários e pessoais — individual</p></div>
   <div class="person-tabs">
@@ -738,7 +744,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </section>
 
-<!-- ══ CAMILA ══ -->
+<!-- == CAMILA == -->
 <section class="secao sec-camila" id="sec-camila">
   <div class="page-header"><h2>Área da Camila Pâmela</h2><p>Gastos diários e pessoais — individual</p></div>
   <div class="person-tabs">
@@ -783,7 +789,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </section>
 
-<!-- ══ DOMÉSTICO ══ -->
+<!-- == DOMÉSTICO == -->
 <section class="secao sec-casal" id="sec-domestico">
   <div class="page-header"><h2>Gastos Domésticos</h2><p>Despesas da casa — compartilhado pelo casal</p></div>
   <div class="form-box">
@@ -803,7 +809,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="lista" id="lista-dom"></div>
 </section>
 
-<!-- ══ RESERVAS ══ -->
+<!-- == RESERVAS == -->
 <section class="secao" id="sec-reservas">
   <div class="page-header"><h2>Reservas do Casal</h2><p>Dinheiro separado com propósito — emergência, lazer e os dogs</p></div>
 
@@ -885,7 +891,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </section>
 
-<!-- ══ INVESTIMENTOS ══ -->
+<!-- == INVESTIMENTOS == -->
 <section class="secao" id="sec-investimentos">
   <div class="page-header"><h2>Investimentos</h2><p>Aportes mensais e construção do patrimônio</p></div>
   <div class="reserva-box invest">
@@ -913,7 +919,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="lista" id="lista-inv"></div>
 </section>
 
-<!-- ══ CONTAS A VENCER ══ -->
+<!-- == CONTAS A VENCER == -->
 <section class="secao" id="sec-contas">
   <div class="page-header"><h2>Contas a Vencer</h2><p>Cadastre e acompanhe todas as contas com vencimento mensal</p></div>
 
@@ -957,7 +963,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div id="notifBannerEl"></div>
 </section>
 
-<!-- ══ RELATÓRIO MENSAL ══ -->
+<!-- == RELATÓRIO MENSAL == -->
 <section class="secao" id="sec-relatorio">
   <div class="rel-hero">
     <h2>Relatório Mensal</h2>
@@ -969,7 +975,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <button class="btn-exportar" onclick="exportarRelatorio()">📋 Copiar Relatório Completo</button>
 </section>
 
-<!-- ══ MURAL DO CASAL ══ -->
+<!-- == MURAL DO CASAL == -->
 <section class="secao" id="sec-mural">
   <div class="page-header"><h2>Mural do Casal</h2><p>Recados financeiros entre vocês dois — em tempo real</p></div>
 
@@ -1013,7 +1019,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div id="listaMural"></div>
 </section>
 
-<!-- ══ METAS & SONHOS ══ -->
+<!-- == METAS & SONHOS == -->
 <section class="secao" id="sec-metas">
   <div class="page-header"><h2>Metas & Sonhos</h2><p>Objetivos individuais e do casal — com progresso visual</p></div>
   <div class="metas-tabs">
@@ -1140,60 +1146,79 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <script>
-const SENHA='Mus@s2026';
+// Enter key para login
+document.addEventListener('DOMContentLoaded',function(){var inp=document.getElementById('inputSenha');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')logar();});});
 
-function tentarLogin(){
-  var inp = document.getElementById('inputSenha');
-  var err = document.getElementById('loginErr');
-  var val = inp ? inp.value : '';
-  if(val === SENHA){
-    document.getElementById('telaLogin').style.display='none';
-    document.getElementById('telaApp').style.display='block';
-    init();
-  } else {
-    if(err) err.textContent='Senha incorreta. Tente novamente.';
-    if(inp) inp.value='';
+// STORAGE — localStorage primeiro, Firebase sync em background
+const store = {
+  async get(k) { 
+    return localStorage.getItem(k); 
+  },
+  async set(k, v) { 
+    localStorage.setItem(k, v);
+    // Sync to Firebase in background (nao bloqueia nada)
+    fbSync(k, v);
+  }
+};
+
+// Firebase sync - completamente separado, nao afeta nada
+var _fbReady = false;
+var _fbDB = null;
+var _fbQueue = {};
+
+function fbSync(k, v) {
+  _fbQueue[k] = v;
+  if (_fbReady && _fbDB) {
+    try {
+      _fbDB.collection('casal').doc('dados').set(_fbQueue, {merge: true})
+        .catch(function(e) { console.log('FB sync err:', e.message); });
+    } catch(e) {}
   }
 }
 
-window.addEventListener('load', function(){
-  var inp = document.getElementById('inputSenha');
-  if(inp){
-    inp.addEventListener('keydown', function(e){
-      if(e.key === 'Enter') tentarLogin();
-    });
+function initFirebase() {
+  try {
+    var cfg = {
+      apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
+      authDomain: "nosdois-financas.firebaseapp.com", 
+      projectId: "nosdois-financas",
+      storageBucket: "nosdois-financas.firebasestorage.app",
+      messagingSenderId: "141934571983",
+      appId: "1:141934571983:web:8288980a9eba25df6f22ba"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    _fbDB = firebase.firestore();
+    _fbReady = true;
+    console.log('Firebase pronto para sync');
+    // Load cloud data and merge with localStorage
+    _fbDB.collection('casal').doc('dados').get().then(function(snap) {
+      if (snap.exists) {
+        var data = snap.data();
+        Object.keys(data).forEach(function(k) {
+          if (!localStorage.getItem(k)) {
+            localStorage.setItem(k, data[k]);
+          }
+        });
+        console.log('Dados da nuvem carregados');
+      }
+    }).catch(function(e) { console.log('FB load err:', e.message); });
+  } catch(e) {
+    console.log('Firebase nao disponivel:', e.message);
   }
+}
+
+// Load Firebase scripts AFTER page loads - does not block anything
+window.addEventListener('load', function() {
+  var s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+  s1.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+    s2.onload = function() { initFirebase(); };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
 });
-
-// STORAGE — Firebase Firestore + localStorage fallback
-const _DOC = 'nosdois_v1';
-const _cache = {};
-
-const store = {
-  async get(k) {
-    if (_cache[k] !== undefined) return _cache[k];
-    try {
-      if (window._db) {
-        const snap = await window._db.collection('casal').doc(_DOC).get();
-        if (snap.exists) {
-          const all = snap.data() || {};
-          Object.assign(_cache, all);
-          return all[k] !== undefined ? all[k] : localStorage.getItem(k);
-        }
-      }
-    } catch(e) { console.warn('get err', e.message); }
-    return localStorage.getItem(k);
-  },
-  async set(k, v) {
-    _cache[k] = v;
-    localStorage.setItem(k, v);
-    try {
-      if (window._db) {
-        await window._db.collection('casal').doc(_DOC).set({[k]: v}, {merge: true});
-      }
-    } catch(e) { console.warn('set err', e.message); }
-  }
-};
 
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 let mes=new Date().getMonth(),ano=new Date().getFullYear();
@@ -1420,9 +1445,9 @@ function reservaResumoHtml(pm,ac,usado,cor){
 }
 async function renderReservas(){
   const [re,rl,rd]=await Promise.all([carregarReserva('emerg'),carregarReserva('lazer'),carregarReserva('dogs')]);
-  const usadoE=(window._cache?.emergencia||[]).reduce((a,g)=>a+g.valor,0);
-  const usadoL=(window._cache?.lazer||[]).reduce((a,g)=>a+g.valor,0);
-  const usadoD=(window._cache?.dogs||[]).reduce((a,g)=>a+g.valor,0);
+  const usadoE=((window._cache&&window._cache.emergencia)||[]).reduce((a,g)=>a+g.valor,0);
+  const usadoL=((window._cache&&window._cache.lazer)||[]).reduce((a,g)=>a+g.valor,0);
+  const usadoD=((window._cache&&window._cache.dogs)||[]).reduce((a,g)=>a+g.valor,0);
   // fill inputs
   if(re.pm)document.getElementById('emerg-pormes').value=re.pm;
   if(re.ac)document.getElementById('emerg-acumulado').value=re.ac;
@@ -1456,7 +1481,7 @@ async function salvarMetaInvest(){
 async function renderInvResumo(){
   const meta=parseFloat(await store.get(chaveG('inv_meta'))||'0')||0;
   const ac=parseFloat(await store.get(chaveG('inv_ac'))||'0')||0;
-  const mes_inv=(window._cache?.investimento||[]).reduce((a,g)=>a+g.valor,0);
+  const mes_inv=((window._cache&&window._cache.investimento)||[]).reduce((a,g)=>a+g.valor,0);
   if(meta)document.getElementById('inv-meta').value=meta;
   if(ac)document.getElementById('inv-acumulado').value=ac;
   const el=document.getElementById('inv-resumo');if(!el)return;
@@ -1562,7 +1587,7 @@ function calcularDivisao(cache){
       if(g.quem==='conjunto'||g.quem==='casal'){
         const metade=g.valor/2;
         conjuntoTotal+=g.valor;
-        itensConjunto.push({...g,_sec:sec,metade});
+        itensConjunto.push(Object.assign({},g,{_sec:sec,metade:metade}));
         // quem pagou fisicamente não importa aqui — ambos devem metade
         deveF+=metade;
         deveC+=metade;
@@ -1664,7 +1689,7 @@ async function renderResumo(cache){
   // lista geral — mostrar divisão nos itens conjuntos
   const tipoLabel={fabio_diario:'👤 Fábio diário',fabio_pessoal:'👤 Fábio pessoal',camila_diario:'👩 Camila diário',camila_pessoal:'👩 Camila pessoal',domestico:'🏠 Doméstico',lazer:'🎡 Lazer',investimento:'📈 Investimento',emergencia:'🚨 Emergência',dogs:'🐾 Dogs'};
   const corMap2={fabio_diario:'fabio',fabio_pessoal:'fabio',camila_diario:'camila',camila_pessoal:'camila',domestico:'casal',lazer:'lazer',investimento:'invest',emergencia:'emerg',dogs:'dogs'};
-  const todos=TIPOS.flatMap(t=>(cache[t]||[]).map(g=>({...g,_tipo:t,_cor:corMap2[t]}))).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const todos=TIPOS.reduce(function(acc,t){return acc.concat((cache[t]||[]).map(function(g){return Object.assign({},g,{_tipo:t,_cor:corMap2[t]});}));},[]).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   document.getElementById('listaGeral').innerHTML=todos.map(g=>{
     const catV=g.cat||g.tipo||'outros';
     const icon=CAT_ICONS[catV]||'💼';
@@ -1695,9 +1720,9 @@ function sair(){
 }
 function fecharOverlay(id,e){if(e.target===document.getElementById(id))fecharModal(id);}
 
-// ══════════════════════════════════════════
+//============================================
 // CATEGORIAS PERSONALIZADAS
-// ══════════════════════════════════════════
+//============================================
 let _catSelectId='';
 let _catSecao='';
 
@@ -1807,9 +1832,9 @@ async function renderAll(){
   await renderMetas();
 }
 
-// ══════════════════════════════════════════
+//============================================
 // CONTAS A VENCER
-// ══════════════════════════════════════════
+//============================================
 const CAT_CONTA_ICONS={financiamento:'🏍️',casa:'🏠',agua:'💧',luz:'⚡',internet:'📶',gas:'🔥',cartao:'💳',aluguel:'🏡',saude:'💊',outros:'📦'};
 
 async function addConta(){
@@ -1863,7 +1888,7 @@ async function renderContas(){
   }
 
   // ordenar por dias para vencer
-  const comDias=contas.map(c=>({...c,dias:diasParaVencer(c.dia)}));
+  const comDias=contas.map(function(c){return Object.assign({},c,{dias:diasParaVencer(c.dia)});});
   comDias.sort((a,b)=>a.dias-b.dias);
 
   // alertas
@@ -1908,9 +1933,9 @@ async function renderContas(){
   agendarNotificacoes(comDias);
 }
 
-// ══════════════════════════════════════════
+//============================================
 // NOTIFICAÇÕES
-// ══════════════════════════════════════════
+//============================================
 function renderNotifBanner(){
   const el=document.getElementById('notifBannerEl');
   if(!el)return;
@@ -1979,9 +2004,9 @@ async function verificarContasAoAbrir(){
   }
 }
 
-// ══════════════════════════════════════════
+//============================================
 // PWA SERVICE WORKER
-// ══════════════════════════════════════════
+//============================================
 function registrarServiceWorker(){
   if('serviceWorker' in navigator){
     const swCode=`
@@ -2090,31 +2115,11 @@ async function exportarRelatorio(){
   const t={fd:cache.fabio_diario,fp:cache.fabio_pessoal,cd:cache.camila_diario,cp:cache.camila_pessoal,dom:cache.domestico,laz:cache.lazer,inv:cache.investimento,emerg:cache.emergencia,dogs:cache.dogs};
   const s=k=>t[k].reduce((a,g)=>a+g.valor,0);
   const total=Object.keys(t).reduce((a,k)=>a+s(k),0);
-  const txt='📊 RELATÓRIO — '+MESES[mes].toUpperCase()+' '+ano+'
-'+'═'.repeat(35)+'
-
-💰 RECEITAS
-  Fábio Padote:   '+fmt(_rF)+'
-  Camila Pâmela:  '+fmt(_rC)+'
-  Total:          '+fmt(renda)+'
-
-💸 GASTOS
-  👤 Fábio diário:    '+fmt(s('fd'))+'
-  👤 Fábio pessoal:   '+fmt(s('fp'))+'
-  👩 Camila diário:   '+fmt(s('cd'))+'
-  👩 Camila pessoal:  '+fmt(s('cp'))+'
-  🏠 Doméstico:       '+fmt(s('dom'))+'
-  🎡 Lazer:           '+fmt(s('laz'))+'
-  📈 Investimentos:   '+fmt(s('inv'))+'
-  🚨 Emergência:      '+fmt(s('emerg'))+'
-  🐾 Dogs:            '+fmt(s('dogs'))+'
-  '+'─'.repeat(28)+'
-  TOTAL: '+fmt(total)+'
-
-💚 SALDO: '+fmt(renda-total)+'
-📈 % Investido: '+(renda>0?(s('inv')/renda*100).toFixed(1):0)+'%
-
-Gerado — App Nós Dois 💑';
+  var linha = '='.repeat(35);
+  var txt = 'RELATORIO - '+MESES[mes].toUpperCase()+' '+ano+'\n'+linha+'\n\n';
+  txt += 'RECEITAS\n  Fabio Padote: '+fmt(_rF)+'\n  Camila Pamela: '+fmt(_rC)+'\n  Total: '+fmt(renda)+'\n\n';
+  txt += 'GASTOS\n  Fabio diario: '+fmt(s('fd'))+'\n  Fabio pessoal: '+fmt(s('fp'))+'\n  Camila diario: '+fmt(s('cd'))+'\n  Camila pessoal: '+fmt(s('cp'))+'\n  Domestico: '+fmt(s('dom'))+'\n  Lazer: '+fmt(s('laz'))+'\n  Investimentos: '+fmt(s('inv'))+'\n  Emergencia: '+fmt(s('emerg'))+'\n  Dogs: '+fmt(s('dogs'))+'\n';
+  txt += linha+'\n  TOTAL: '+fmt(total)+'\n\nSALDO: '+fmt(renda-total)+'\n% Investido: '+(renda>0?(s('inv')/renda*100).toFixed(1):0)+'%\n\nGerado - App Nos Dois';
   try{await navigator.clipboard.writeText(txt);}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
   alert('✅ Relatório copiado! Cole no WhatsApp ou e-mail.');
 }
@@ -2147,7 +2152,7 @@ async function renderMural(){
   if(alertEl){alertEl.innerHTML=naoLidas.length?`<div class="alerta-banner" style="background:linear-gradient(135deg,var(--casal),#1b5e38);margin-bottom:16px"><div class="ab-icon">📝</div><div><h4>${naoLidas.length} nota(s) não lida(s)</h4><p>${naoLidas[0].quem==='fabio'?'Fábio':'Camila'}: "${naoLidas[0].msg.substring(0,50)}"</p></div></div>`:'';}
   if(!notas.length){if(listEl)listEl.innerHTML='<div class="vazio">Nenhuma nota ainda. Deixem recados um para o outro! 📝</div>';return;}
   if(listEl){listEl.innerHTML=notas.map(n=>{const isF=n.quem==='fabio';const cor=isF?'var(--fabio)':'var(--camila)';const cls=isF?'fabio-nota':'camila-nota';return`<div class="mural-nota ${cls} ${!n.lida?'nao-lida':''}"><div class="mural-top"><div class="mural-autor" style="color:${cor}">${isF?'👤 Fábio':'👩 Camila'}</div><div style="display:flex;align-items:center;gap:8px"><span class="mural-hora">${n.hora}</span><button class="item-del" onclick="delNota(${n.id})">✕</button></div></div><div class="mural-msg">${n.msg}</div><div style="font-size:.65rem;font-weight:700;margin-top:4px;color:${n.lida?'var(--casal)':'var(--warn)'}">${n.lida?'✅ Lida':'🔵 Não lida'}</div></div>`;}).join('');}
-  setTimeout(async()=>{const todas=await carregarNotas();await store.set(MURAL_KEY,JSON.stringify(todas.map(n=>({...n,lida:true}))));const b=document.getElementById('muralBadge');if(b)b.style.display='none';},2000);
+  setTimeout(async()=>{const todas=await carregarNotas();await store.set(MURAL_KEY,JSON.stringify(todas.map(function(n){return Object.assign({},n,{lida:true});})));const b=document.getElementById('muralBadge');if(b)b.style.display='none';},2000);
 }
 async function verificarMuralAoAbrir(){
   const notas=await carregarNotas();
@@ -2296,5 +2301,6 @@ async function init(){
   await verificarContasAoAbrir();
 }
 </script>
+
 </body>
 </html>
