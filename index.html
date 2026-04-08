@@ -875,6 +875,62 @@ function logar(){
 </section>
 
 <!-- == RESERVAS == -->
+<!-- CARTEIRAS & CONTAS -->
+<section class="secao" id="sec-carteiras">
+  <div class="page-header"><h2>Carteiras &amp; Contas</h2><p>Saldos dos bancos e cartoes do casal</p></div>
+
+  <div class="saldo-total-card">
+    <h3>Patrimonio em conta</h3>
+    <div class="saldo-total-nums">
+      <div class="saldo-num"><div class="sl">Total Casal</div><div class="sv" id="saldoTotalCasal">R$ 0,00</div></div>
+      <div class="saldo-num"><div class="sl">Fabio</div><div class="sv" id="saldoTotalFabio">R$ 0,00</div></div>
+      <div class="saldo-num"><div class="sl">Camila</div><div class="sv" id="saldoTotalCamila">R$ 0,00</div></div>
+    </div>
+  </div>
+
+  <div id="carteirasAlertasEl"></div>
+  <div class="carteiras-grid" id="carteirasGridEl"></div>
+
+  <div class="form-box">
+    <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Adicionar conta ou cartao</div>
+    <div class="fields">
+      <div><label>Nome</label><input type="text" id="ck-nome" placeholder="Ex: Nubank, Mercado Pago..."/></div>
+      <div><label>Icone (emoji)</label><input type="text" id="ck-icon" placeholder="Ex: 🟣 🟡 🔵" maxlength="4" style="font-size:1.2rem;text-align:center"/></div>
+      <div><label>Tipo</label>
+        <select id="ck-tipo">
+          <option value="conta">🏦 Conta Corrente</option>
+          <option value="poupanca">💰 Poupanca</option>
+          <option value="credito">💳 Cartao Credito</option>
+          <option value="debito">💳 Cartao Debito</option>
+          <option value="digital">📱 Carteira Digital</option>
+          <option value="investimento">📈 Investimento</option>
+        </select>
+      </div>
+      <div><label>De quem</label>
+        <select id="ck-dono">
+          <option value="casal">💑 Casal</option>
+          <option value="fabio">👤 Fabio</option>
+          <option value="camila">👩 Camila</option>
+        </select>
+      </div>
+      <div><label>Saldo atual (R$)</label><input type="number" id="ck-saldo" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Alerta saldo baixo (R$)</label><input type="number" id="ck-alerta" placeholder="Ex: 100"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--casal)" onclick="addCarteira()">+ Adicionar Conta/Cartao</button></div>
+    </div>
+  </div>
+
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Historico por cartao</div>
+    <div style="margin-bottom:10px">
+      <label>Selecionar cartao</label>
+      <select id="ck-filtro-select" onchange="renderHistoricoCarteira()" style="margin-top:6px">
+        <option value="">- Selecione um cartao -</option>
+      </select>
+    </div>
+    <div id="historicoCarteiraEl"></div>
+  </div>
+</section>
+
 <section class="secao" id="sec-reservas">
   <div class="page-header"><h2>Reservas do Casal</h2><p>Dinheiro separado com propósito — emergência, lazer e os dogs</p></div>
 
@@ -1378,7 +1434,8 @@ function setSecao(btn){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('ativo'));
   document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
   btn.classList.add('ativo');
-  document.getElementById('sec-'+btn.dataset.sec).classList.add('ativa');
+  var _secEl = document.getElementById('sec-'+btn.dataset.sec);
+  if(_secEl) _secEl.classList.add('ativa');
   if(btn.dataset.sec==='relatorio')renderRelatorio();
   if(btn.dataset.sec==='mural')renderMural();
   if(btn.dataset.sec==='fontes')renderFontes();
@@ -1390,7 +1447,9 @@ function setSecaoMob(sec,btn){
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
   document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
   btn.classList.add('ativo');
-  document.getElementById('sec-'+sec).classList.add('ativa');
+  var secEl = document.getElementById('sec-'+sec);
+  if(secEl) secEl.classList.add('ativa');
+  else { console.warn('Section not found: sec-'+sec); return; }
 }
 function abrirDrawer(){
   document.getElementById('drawerOverlay').classList.add('aberto');
@@ -1406,7 +1465,8 @@ function setSecaoDrawer(btn){
   document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
   btn.classList.add('ativo');
-  document.getElementById('sec-'+sec).classList.add('ativa');
+  var _secElMob = document.getElementById('sec-'+sec);
+  if(_secElMob) _secElMob.classList.add('ativa');
   const mobBtn=document.getElementById('mob-'+sec);
   if(mobBtn)mobBtn.classList.add('ativo');
   if(sec==='relatorio')renderRelatorio();
@@ -3019,6 +3079,177 @@ async function verificarResumoMural(){
   });
   await store.set(MURAL_KEY, JSON.stringify(notas));
   localStorage.setItem(chaveVisto, '1');
+}
+
+
+// CARTEIRAS & CONTAS
+var CARTEIRAS_KEY = 'nd2_g_carteiras';
+var TIPOS_CARTEIRA = {conta:'Conta Corrente',poupanca:'Poupanca',credito:'Credito',debito:'Debito',digital:'Digital',investimento:'Investimento'};
+var DONOS_CK = {casal:'Casal',fabio:'Fabio',camila:'Camila'};
+
+async function carregarCarteiras(){
+  var r = await store.get(CARTEIRAS_KEY);
+  return r ? JSON.parse(r) : [];
+}
+async function salvarCarteiras(c){
+  await store.set(CARTEIRAS_KEY, JSON.stringify(c));
+}
+
+async function addCarteira(){
+  var nome = document.getElementById('ck-nome').value.trim();
+  var icon = document.getElementById('ck-icon').value.trim()||'💳';
+  var tipo = document.getElementById('ck-tipo').value;
+  var dono = document.getElementById('ck-dono').value;
+  var saldo = parseFloat(document.getElementById('ck-saldo').value)||0;
+  var alerta = parseFloat(document.getElementById('ck-alerta').value)||0;
+  if(!nome){alert('Digite o nome da conta!');return;}
+  var carteiras = await carregarCarteiras();
+  carteiras.push({id:Date.now(),nome:nome,icon:icon,tipo:tipo,dono:dono,saldo:saldo,alerta:alerta});
+  await salvarCarteiras(carteiras);
+  document.getElementById('ck-nome').value='';
+  document.getElementById('ck-icon').value='';
+  document.getElementById('ck-saldo').value='';
+  document.getElementById('ck-alerta').value='';
+  await renderCarteiras();
+}
+
+async function delCarteira(id){
+  if(!confirm('Remover esta conta?')) return;
+  var c = (await carregarCarteiras()).filter(function(x){return x.id!==id;});
+  await salvarCarteiras(c);
+  await renderCarteiras();
+}
+
+async function atualizarSaldoBtn(btn){
+  var id = parseInt(btn.dataset.id);
+  var inp = document.getElementById('ns-'+id);
+  if(!inp) return;
+  var val = parseFloat(inp.value);
+  if(isNaN(val)){alert('Digite um valor valido!');return;}
+  var carteiras = await carregarCarteiras();
+  carteiras = carteiras.map(function(c){ if(c.id===id) c.saldo=val; return c; });
+  await salvarCarteiras(carteiras);
+  inp.value='';
+  await renderCarteiras();
+}
+
+async function renderCarteiras(){
+  var carteiras = await carregarCarteiras();
+  var grid = document.getElementById('carteirasGridEl');
+  var alertasEl = document.getElementById('carteirasAlertasEl');
+  var filtroSel = document.getElementById('ck-filtro-select');
+  if(!grid) return;
+
+  // Totals
+  var totalTodos = carteiras.reduce(function(a,c){return a+c.saldo;},0);
+  var totalF = carteiras.filter(function(c){return c.dono==='fabio';}).reduce(function(a,c){return a+c.saldo;},0);
+  var totalC = carteiras.filter(function(c){return c.dono==='camila';}).reduce(function(a,c){return a+c.saldo;},0);
+  var totalCasal = carteiras.filter(function(c){return c.dono==='casal';}).reduce(function(a,c){return a+c.saldo;},0);
+
+  var stc = document.getElementById('saldoTotalCasal');
+  var stf = document.getElementById('saldoTotalFabio');
+  var stca = document.getElementById('saldoTotalCamila');
+  if(stc) stc.textContent = fmt(totalCasal+totalF+totalC);
+  if(stf) stf.textContent = fmt(totalF);
+  if(stca) stca.textContent = fmt(totalC);
+
+  // Gastos por carteira this month
+  var TIPOS_ALL = ['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal','domestico','lazer','emergencia','dogs','investimento'];
+  var gastosPorCarteira = {};
+  var faturasPorCarteira = {};
+  TIPOS_ALL.forEach(function(tipo){
+    var dados = [];
+    try { dados = JSON.parse(localStorage.getItem(chave(tipo))||'[]'); } catch(e){}
+    dados.forEach(function(g){
+      if(g.carteira){
+        if(!gastosPorCarteira[g.carteira]) gastosPorCarteira[g.carteira]=0;
+        gastosPorCarteira[g.carteira]+=g.valor;
+        if(g.pag==='credito'){
+          if(!faturasPorCarteira[g.carteira]) faturasPorCarteira[g.carteira]=0;
+          faturasPorCarteira[g.carteira]+=g.valor;
+        }
+      }
+    });
+  });
+
+  // Update filtro select
+  if(filtroSel){
+    filtroSel.innerHTML = '<option value="">- Selecione -</option>';
+    carteiras.forEach(function(c){
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.icon+' '+c.nome;
+      filtroSel.appendChild(opt);
+    });
+  }
+
+  // Alertas
+  var alertas = carteiras.filter(function(c){return c.alerta>0&&c.saldo<=c.alerta;});
+  if(alertasEl){
+    alertasEl.innerHTML = alertas.map(function(c){
+      return '<div class="alerta-banner" style="margin-bottom:10px"><div class="ab-icon">⚠️</div>'+
+        '<div><h4>Saldo baixo: '+c.icon+' '+c.nome+'</h4>'+
+        '<p>Saldo atual: '+fmt(c.saldo)+' — limite: '+fmt(c.alerta)+'</p></div></div>';
+    }).join('');
+  }
+
+  // Render cards
+  var DONO_COLORS = {casal:'var(--casal)',fabio:'var(--fabio)',camila:'var(--camila)'};
+  if(!carteiras.length){
+    grid.innerHTML='<div class="vazio" style="grid-column:1/-1">Nenhuma conta cadastrada. Adicione abaixo! 💳</div>';
+    return;
+  }
+  grid.innerHTML = carteiras.map(function(c){
+    var cor = DONO_COLORS[c.dono]||'var(--casal)';
+    var gastos = gastosPorCarteira[c.id]||0;
+    var fatura = faturasPorCarteira[c.id]||0;
+    var isAlerta = c.alerta>0&&c.saldo<=c.alerta;
+    return '<div class="carteira-card" style="border-color:'+cor+'40">'+
+      '<button class="ck-del" onclick="delCarteira('+c.id+')" title="Remover">✕</button>'+
+      '<div class="ck-header">'+
+      '<div class="ck-icon" style="background:'+cor+'20">'+c.icon+'</div>'+
+      '<div><div class="ck-nome">'+c.nome+'</div>'+
+      '<div class="ck-tipo">'+(TIPOS_CARTEIRA[c.tipo]||c.tipo)+'</div></div></div>'+
+      '<div class="ck-saldo" style="color:'+cor+'">'+fmt(c.saldo)+'</div>'+
+      '<div><span class="ck-dono" style="background:'+cor+'15;color:'+cor+'">'+
+      (DONOS_CK[c.dono]||c.dono)+'</span></div>'+
+      (gastos>0?'<div class="ck-fatura">Gastos este mes: <strong>'+fmt(gastos)+'</strong></div>':'')+
+      (fatura>0?'<div class="ck-fatura" style="color:var(--emerg)">Fatura credito: <strong>'+fmt(fatura)+'</strong></div>':'')+
+      (isAlerta?'<div class="ck-alerta">⚠️ Saldo abaixo do limite!</div>':'')+
+      '<div style="display:flex;gap:6px;margin-top:10px;align-items:center">'+
+      '<input type="number" placeholder="Novo saldo R$" id="ns-'+c.id+'" style="flex:1;font-size:.8rem;padding:6px 8px"/>'+
+      '<button class="btn-sm" data-id="'+c.id+'" onclick="atualizarSaldoBtn(this)">Atualizar</button>'+
+      '</div></div>';
+  }).join('');
+}
+
+async function renderHistoricoCarteira(){
+  var sel = document.getElementById('ck-filtro-select');
+  var el = document.getElementById('historicoCarteiraEl');
+  if(!sel||!el) return;
+  var carteiraId = parseInt(sel.value);
+  if(!carteiraId){el.innerHTML='';return;}
+  var TIPOS_ALL = ['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal','domestico','lazer','emergencia','dogs','investimento'];
+  var TIPO_LABELS = {fabio_diario:'Fabio diario',fabio_pessoal:'Fabio pessoal',camila_diario:'Camila diario',camila_pessoal:'Camila pessoal',domestico:'Domestico',lazer:'Lazer',emergencia:'Emergencia',dogs:'Dogs',investimento:'Investimento'};
+  var itens = [];
+  TIPOS_ALL.forEach(function(tipo){
+    var dados=[];
+    try{dados=JSON.parse(localStorage.getItem(chave(tipo))||'[]');}catch(e){}
+    dados.filter(function(g){return g.carteira===carteiraId;}).forEach(function(g){
+      itens.push(Object.assign({},g,{_tipo:tipo}));
+    });
+  });
+  itens.sort(function(a,b){return(b.data||'').localeCompare(a.data||'');});
+  if(!itens.length){el.innerHTML='<div class="vazio">Nenhum lancamento neste cartao este mes</div>';return;}
+  var total=itens.reduce(function(a,g){return a+g.valor;},0);
+  el.innerHTML='<div style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:8px">'+
+    itens.length+' lancamento(s) — Total: <strong style="color:var(--emerg)">'+fmt(total)+'</strong></div>'+
+    '<div class="lista">'+itens.map(function(g){
+      return '<div class="item"><div class="item-ic">💳</div>'+
+        '<div class="item-info"><div class="item-nome">'+g.desc+'</div>'+
+        '<div class="item-meta">'+fmtD(g.data)+' · '+(TIPO_LABELS[g._tipo]||'')+'</div></div>'+
+        '<div class="item-val casal">'+fmt(g.valor)+'</div></div>';
+    }).join('')+'</div>';
 }
 </script>
 
