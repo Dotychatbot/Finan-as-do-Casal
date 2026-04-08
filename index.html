@@ -1165,98 +1165,142 @@ function logar(){
 // Enter key para login
 document.addEventListener('DOMContentLoaded',function(){var inp=document.getElementById('inputSenha');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')logar();});});
 
-// STORAGE — Firestore REST API (sem biblioteca, funciona em qualquer lugar)
-var FB_PROJECT = 'nosdois-financas';
-var FB_KEY = 'AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA';
-var FB_DOC = 'casal/dados';
-var FB_URL = 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT + '/databases/(default)/documents/' + FB_DOC + '?key=' + FB_KEY;
+// STORAGE — localStorage + Firebase compat (versao que funcionava)
+var _fbReady = false;
+var _fbDB = null;
+var _fbQueue = {};
+var _fbFlushing = false;
 
-// Convert value to Firestore format
-function toFB(v) {
-  return {stringValue: String(v)};
-}
-// Convert Firestore format to value
-function fromFB(f) {
-  if (!f) return null;
-  return f.stringValue || f.integerValue || f.doubleValue || null;
-}
-
-// Save to Firestore via REST
-function fbSave(key, value) {
-  var body = {fields: {}};
-  body.fields[key] = toFB(value);
-  fetch(FB_URL, {
-    method: 'PATCH',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body)
-  }).then(function(r) {
-    if (r.ok) console.log('FB salvo: ' + key);
-    else r.text().then(function(t) { console.log('FB err:', t.substring(0,100)); });
-  }).catch(function(e) { console.log('FB save fail:', e.message); });
-}
-
-// Load ALL from Firestore via REST
-function fbLoad() {
-  return fetch(FB_URL + '&key=' + FB_KEY)
-    .then(function(r) { return r.ok ? r.json() : null; })
-    .then(function(doc) {
-      if (!doc || !doc.fields) return;
-      var fields = doc.fields;
-      Object.keys(fields).forEach(function(k) {
-        var v = fromFB(fields[k]);
-        if (v !== null) {
-          var local = localStorage.getItem(k);
-          if (!local) {
-            localStorage.setItem(k, v);
-          } else {
-            // Merge arrays
-            try {
-              var la = JSON.parse(local);
-              var ca = JSON.parse(v);
-              if (Array.isArray(la) && Array.isArray(ca)) {
-                var merged = ca.slice();
-                la.forEach(function(item) {
-                  if (!merged.find(function(c) { return c.id === item.id; })) {
-                    merged.push(item);
-                  }
-                });
-                var ms = JSON.stringify(merged);
-                localStorage.setItem(k, ms);
-                fbSave(k, ms);
-              }
-            } catch(e) {}
-          }
-        }
-      });
-      console.log('FB carregado: ' + Object.keys(fields).length + ' chaves');
-      if (typeof renderAll === 'function') renderAll();
+function flushFB() {
+  if (!_fbReady || !_fbDB || _fbFlushing) return;
+  var keys = Object.keys(_fbQueue);
+  if (!keys.length) return;
+  _fbFlushing = true;
+  var payload = {};
+  keys.forEach(function(k){ payload[k] = _fbQueue[k]; });
+  _fbDB.collection('casal').doc('v1').set(payload, {merge:true})
+    .then(function(){
+      keys.forEach(function(k){ delete _fbQueue[k]; });
+      _fbFlushing = false;
     })
-    .catch(function(e) { console.log('FB load fail:', e.message); });
-}
-
-// Push all local nd2_ keys to Firebase
-function fbPushAll() {
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && k.startsWith('nd2_')) {
-      fbSave(k, localStorage.getItem(k));
-    }
-  }
+    .catch(function(e){
+      _fbFlushing = false;
+      setTimeout(flushFB, 3000);
+    });
 }
 
 const store = {
   async get(k) { return localStorage.getItem(k); },
   async set(k, v) {
     localStorage.setItem(k, v);
-    fbSave(k, v);
+    _fbQueue[k] = v;
+    flushFB();
   }
 };
 
-// Load Firebase data when page is ready
+function fbSave(k, v) {
+  localStorage.setItem(k, v);
+  _fbQueue[k] = v;
+  flushFB();
+}
+
+function startFirebase() {
+  try {
+    var cfg = {
+      apiKey:"AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
+      authDomain:"nosdois-financas.firebaseapp.com",
+      projectId:"nosdois-financas",
+      storageBucket:"nosdois-financas.firebasestorage.app",
+      messagingSenderId:"141934571983",
+      appId:"1:141934571983:web:8288980a9eba25df6f22ba"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    _fbDB = firebase.firestore();
+    _fbReady = true;
+    console.log('Firebase OK');
+    // Load cloud data
+    _fbDB.collection('casal').doc('v1').get()
+      .then(function(snap) {
+        if (!snap.exists) { flushFB(); return; }
+        var cloud = snap.data();
+        Object.keys(cloud).forEach(function(k) {
+          var local = localStorage.getItem(k);
+          var cv = cloud[k];
+          if (!local) {
+            localStorage.setItem(k, cv);
+          } else {
+            try {
+              var la = JSON.parse(local);
+              var ca = JSON.parse(cv);
+              if (Array.isArray(la) && Array.isArray(ca)) {
+                var merged = ca.slice();
+                la.forEach(function(item) {
+                  if (!merged.find(function(c){return c.id===item.id;})) merged.push(item);
+                });
+                var ms = JSON.stringify(merged);
+                localStorage.setItem(k, ms);
+                _fbQueue[k] = ms;
+              }
+            } catch(e) {}
+          }
+        });
+        flushFB();
+        if (typeof renderAll === 'function') renderAll();
+      })
+      .catch(function(e){ console.log('FB load err:', e.message); });
+  } catch(e) { console.log('FB init err:', e.message); }
+}
+
+// Listen for realtime updates
+function startRealtimeSync() {
+  if (!_fbDB) return;
+  _fbDB.collection('casal').doc('v1').onSnapshot(function(snap) {
+    if (!snap.exists) return;
+    var cloud = snap.data();
+    var changed = false;
+    Object.keys(cloud).forEach(function(k) {
+      var local = localStorage.getItem(k);
+      if (local !== cloud[k]) {
+        try {
+          var la = JSON.parse(local||'[]');
+          var ca = JSON.parse(cloud[k]);
+          if (Array.isArray(la) && Array.isArray(ca)) {
+            var merged = ca.slice();
+            la.forEach(function(item) {
+              if (!merged.find(function(c){return c.id===item.id;})) merged.push(item);
+            });
+            var ms = JSON.stringify(merged);
+            localStorage.setItem(k, ms);
+          } else {
+            localStorage.setItem(k, cloud[k]);
+          }
+          changed = true;
+        } catch(e) {
+          localStorage.setItem(k, cloud[k]);
+          changed = true;
+        }
+      }
+    });
+    if (changed && typeof renderAll === 'function') {
+      console.log('Sync: dados atualizados da nuvem');
+      renderAll();
+    }
+  }, function(e){ console.log('Realtime err:', e.message); });
+}
+
 window.addEventListener('load', function() {
-  fbLoad().then(function() {
-    fbPushAll();
-  });
+  var s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+  s1.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+    s2.onload = function() {
+      startFirebase();
+      setTimeout(startRealtimeSync, 3000);
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
 });
 
 
@@ -1376,6 +1420,12 @@ async function add(tipo){
   const dataEl=document.getElementById(ids[4]);if(dataEl)dataEl.value=hoje();
   renderAll();
 }
+function delItem(btn){
+  var tipo = btn.dataset.tipo;
+  var id = parseInt(btn.dataset.id);
+  del(tipo, id);
+}
+
 async function del(tipo,id){
   if(!confirm('Remover este lançamento?'))return;
   const dados=(await carregar(tipo)).filter(g=>g.id!==id);
@@ -1402,21 +1452,24 @@ const CAT_ICONS={alimentacao:'🍔',transporte:'⛽',compras:'🛍️',saude:'�
 const QTAGS={fabio:'<span class="tag tag-f">Fábio</span>',camila:'<span class="tag tag-c">Camila</span>',casal:'<span class="tag tag-casal">Casal</span>',conjunto:'<span class="tag tag-casal">Casal</span>'};
 
 function renderLista(tipo,dados){
-  const listId={fabio_diario:'lista-fd',fabio_pessoal:'lista-fp',camila_diario:'lista-cd',camila_pessoal:'lista-cp',domestico:'lista-dom',lazer:'lista-laz',investimento:'lista-inv',emergencia:'lista-emerg',dogs:'lista-dogs'}[tipo];
+  var listId={fabio_diario:'lista-fd',fabio_pessoal:'lista-fp',camila_diario:'lista-cd',camila_pessoal:'lista-cp',domestico:'lista-dom',lazer:'lista-laz',investimento:'lista-inv',emergencia:'lista-emerg',dogs:'lista-dogs'}[tipo];
   if(!listId)return;
-  const el=document.getElementById(listId);if(!el)return;
-  const f=filtros[tipo]||'todos';
-  const catKey=tipo==='investimento'?'tipo':'cat';
-  const lista=f==='todos'?dados:dados.filter(g=>g[catKey]===f);
-  lista.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
-  const cor={fabio_diario:'fabio',fabio_pessoal:'fabio',camila_diario:'camila',camila_pessoal:'camila',domestico:'casal',lazer:'lazer',investimento:'invest',emergencia:'emerg',dogs:'dogs'}[tipo]||'casal';
+  var el=document.getElementById(listId);if(!el)return;
+  var f=filtros[tipo]||'todos';
+  var catKey=tipo==='investimento'?'tipo':'cat';
+  var lista=f==='todos'?dados:dados.filter(function(g){return g[catKey]===f;});
+  lista.sort(function(a,b){return(b.data||'').localeCompare(a.data||'');});
+  var cor={fabio_diario:'fabio',fabio_pessoal:'fabio',camila_diario:'camila',camila_pessoal:'camila',domestico:'casal',lazer:'lazer',investimento:'invest',emergencia:'emerg',dogs:'dogs'}[tipo]||'casal';
   if(!lista.length){el.innerHTML='<div class="vazio">Nenhum lançamento ainda ✨</div>';return;}
-  el.innerHTML=lista.map(g=>{
-    const catV=g[catKey]||'outros';
-    const icon=CAT_ICONS[catV]||'💼';
-    const qt=g.quem?(QTAGS[g.quem]||''):'';
-    const platInfo=g.plat?` · ${g.plat}`:'';
-    return`<div class="item"><div class="item-ic">${icon}</div><div class="item-info"><div class="item-nome">${g.desc}${qt}</div><div class="item-meta">${fmtD(g.data)}${g.obs?' · '+g.obs:''}${platInfo}</div></div><div class="item-val ${cor}">${fmt(g.valor)}</div><button class="item-del" onclick="del('${tipo}',${g.id})">✕</button></div>`;
+  el.innerHTML=lista.map(function(g){
+    var catV=g[catKey]||'outros';
+    var icon=CAT_ICONS[catV]||'💼';
+    var qt=g.quem?(QTAGS[g.quem]||''):'';
+    var platInfo=g.plat?' · '+g.plat:'';
+    var recTag=g._recorrente?'<span style="font-size:.6rem;background:#2a7d4f20;color:var(--casal);padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700">🔄 recorrente</span>':'';
+
+    var delBtnHtml = g._recorrente ? '' : ('<button class="item-del" data-tipo="'+tipo+'" data-id="'+g.id+'" onclick="delItem(this)">&#x2715;</button>');
+    return'<div class="item"><div class="item-ic">'+icon+'</div><div class="item-info"><div class="item-nome">'+g.desc+qt+recTag+'</div><div class="item-meta">'+fmtD(g.data)+(g.obs?' · '+g.obs:'')+platInfo+'</div></div><div class="item-val '+cor+'">'+fmt(g.valor)+'</div>'+delBtnHtml+'</div>';
   }).join('');
 }
 
@@ -1621,13 +1674,39 @@ async function togglePago(btn){
 }
 
 function renderReceitas(){
+  // Get recorrentes to calculate deductions
+  var recs = [];
+  try { recs = JSON.parse(localStorage.getItem('nd2_g_recorrentes')||'[]'); } catch(e){}
+  var recAtivos = recs.filter(function(r){ return recorrenteAtivo(r); });
+  
+  var recFabio = recAtivos.filter(function(r){return r.secao==='fabio_pessoal';}).reduce(function(a,r){return a+r.val;},0);
+  var recCamila = recAtivos.filter(function(r){return r.secao==='camila_pessoal';}).reduce(function(a,r){return a+r.val;},0);
+  var recDom = recAtivos.filter(function(r){return r.secao==='domestico';}).reduce(function(a,r){return a+r.val;},0);
+  
+  var dispF = _rF - _cF - recFabio - recDom/2;
+  var dispC = _rC - _cC - recCamila - recDom/2;
+
   document.getElementById('rendaFabioEl').textContent=fmt(_rF);
   document.getElementById('rendaCamilaEl').textContent=fmt(_rC);
-  document.getElementById('contribFabioEl').textContent=`Contribuição doméstica: ${fmt(_cF)}`;
-  document.getElementById('contribCamilaEl').textContent=`Contribuição doméstica: ${fmt(_cC)}`;
-  const total=_rF+_rC;
+  
+  // Show detailed breakdown
+  var cfEl = document.getElementById('contribFabioEl');
+  if(cfEl) cfEl.innerHTML = 
+    'Contribuicao domestica: <strong>'+fmt(_cF)+'</strong><br>'+
+    (recFabio>0?'Recorrentes pessoais: <strong style="color:var(--warn)">-'+fmt(recFabio)+'</strong><br>':'')+
+    (recDom>0?'Metade recorrentes casal: <strong style="color:var(--warn)">-'+fmt(recDom/2)+'</strong><br>':'')+
+    '<span style="color:'+(dispF>=0?'var(--casal)':'var(--emerg)')+'">Disponivel: <strong>'+fmt(dispF)+'</strong></span>';
+
+  var ccEl = document.getElementById('contribCamilaEl');
+  if(ccEl) ccEl.innerHTML = 
+    'Contribuicao domestica: <strong>'+fmt(_cC)+'</strong><br>'+
+    (recCamila>0?'Recorrentes pessoais: <strong style="color:var(--warn)">-'+fmt(recCamila)+'</strong><br>':'')+
+    (recDom>0?'Metade recorrentes casal: <strong style="color:var(--warn)">-'+fmt(recDom/2)+'</strong><br>':'')+
+    '<span style="color:'+(dispC>=0?'var(--casal)':'var(--emerg)')+'">Disponivel: <strong>'+fmt(dispC)+'</strong></span>';
+
+  var total=_rF+_rC;
   document.getElementById('rendaTotalEl').textContent=fmt(total);
-  document.getElementById('contribInfoEl').textContent=total>0?`Fundo doméstico: ${fmt(_cF+_cC)}`:'Adicione as rendas';
+  document.getElementById('contribInfoEl').textContent=total>0?'Fundo domestico: '+fmt(_cF+_cC):'Adicione as rendas';
 }
 
 // PORQUÊ
@@ -2585,16 +2664,48 @@ function parcelaAtual(rec){
   return atualMes-inicioMes+1;
 }
 async function aplicarRecorrentesNoMes(){
-  const recs=await carregarRecorrentes();
-  const ativos=recs.filter(r=>recorrenteAtivo(r));
-  for(const r of ativos){
-    const dados=await carregar(r.secao);
-    const parcela=parcelaAtual(r);
-    const jaExiste=dados.some(g=>g._recId===r.id&&g.data&&g.data.startsWith(ano+'-'+String(mes+1).padStart(2,'0')));
-    if(!jaExiste){
-      const obsStr=r.meses>0?`Parcela ${parcela}/${r.meses}`:(r.obs||'Recorrente');
-      dados.push({id:Date.now()+Math.random(),desc:r.desc,valor:r.val,cat:r.cat,pag:'debito',data:ano+'-'+String(mes+1).padStart(2,'0')+'-'+String(r.dia).padStart(2,'0'),obs:obsStr,quem:'conjunto',_recId:r.id});
-      await salvar(r.secao,dados);
+  var recs = await carregarRecorrentes();
+  var ativos = recs.filter(function(r){ return recorrenteAtivo(r); });
+  var mesStr = ano+'-'+String(mes+1).padStart(2,'0');
+  
+  for(var i=0; i<ativos.length; i++){
+    var r = ativos[i];
+    var parcela = parcelaAtual(r);
+    var obsStr = r.meses>0?('Parcela '+parcela+'/'+r.meses):(r.obs||'Recorrente');
+    var dataStr = mesStr+'-'+String(r.dia||1).padStart(2,'0');
+    var itemBase = {
+      id: Date.now()+i+Math.random(),
+      desc: r.desc,
+      valor: r.val,
+      cat: r.cat,
+      pag: 'debito',
+      data: dataStr,
+      obs: obsStr,
+      _recId: r.id,
+      _recorrente: true
+    };
+
+    if(r.secao === 'domestico'){
+      // Goes to domestico as conjunto
+      var domDados = await carregar('domestico');
+      var jaExisteDom = domDados.some(function(g){
+        return g._recId===r.id && g.data && g.data.startsWith(mesStr);
+      });
+      if(!jaExisteDom){
+        var item = Object.assign({}, itemBase, {quem:'conjunto'});
+        domDados.push(item);
+        await salvar('domestico', domDados);
+      }
+    } else {
+      // Goes to personal section (fabio_pessoal or camila_pessoal)
+      var pessDados = await carregar(r.secao);
+      var jaExistePess = pessDados.some(function(g){
+        return g._recId===r.id && g.data && g.data.startsWith(mesStr);
+      });
+      if(!jaExistePess){
+        pessDados.push(Object.assign({}, itemBase));
+        await salvar(r.secao, pessDados);
+      }
     }
   }
 }
