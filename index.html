@@ -302,6 +302,25 @@ input:focus,select:focus{border-color:var(--casal);}
 .item-val.dogs{color:var(--dogs);}
 hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
+/* CARTEIRAS */
+.carteira-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;position:relative;}
+.carteira-card .ck-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.carteira-card .ck-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.carteira-card .ck-nome{font-weight:700;font-size:.9rem;}
+.carteira-card .ck-tipo{font-size:.7rem;color:var(--muted);}
+.carteira-card .ck-saldo{font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:500;}
+.carteira-card .ck-dono{font-size:.68rem;padding:2px 7px;border-radius:4px;display:inline-block;margin-top:3px;}
+.carteira-card .ck-fatura{font-size:.76rem;color:var(--muted);margin-top:4px;}
+.carteira-card .ck-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px 6px;border-radius:6px;}
+.carteira-card .ck-del:hover{color:var(--emerg);}
+.carteira-card .ck-alerta{background:var(--emerg)15;border:1px solid var(--emerg)30;border-radius:6px;padding:5px 8px;font-size:.72rem;color:var(--emerg);margin-top:6px;}
+.carteiras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+.saldo-total-card{background:linear-gradient(135deg,#1c1a17,#2d3a2e);color:white;border-radius:var(--r);padding:20px;margin-bottom:18px;}
+.saldo-total-card h3{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;font-style:italic;opacity:.8;margin-bottom:8px;}
+.saldo-total-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.saldo-num .sl{font-size:.62rem;opacity:.5;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.saldo-num .sv{font-family:'DM Mono',monospace;font-size:.95rem;}
+
 /* RELATÓRIO */
 .rel-hero{background:linear-gradient(135deg,#1c1a17,#2d3a2e);border-radius:var(--r);padding:24px;color:white;margin-bottom:18px;}
 .rel-hero h2{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:300;font-style:italic;margin-bottom:4px;}
@@ -478,6 +497,7 @@ function logar(){
   <div class="nav-divider"></div>
   <div class="nav-section-label">Casal</div>
   <button class="nav-item" data-sec="domestico" onclick="setSecao(this)"><span class="ni">🏠</span>Doméstico</button>
+  <button class="nav-item" data-sec="carteiras" onclick="setSecao(this)"><span class="ni">💳</span>Carteiras & Contas</button>
   <button class="nav-item" data-sec="reservas" onclick="setSecao(this)"><span class="ni">🛡️</span>Reservas</button>
   <button class="nav-item" data-sec="investimentos" onclick="setSecao(this)"><span class="ni">📈</span>Investimentos</button>
   <button class="nav-item" data-sec="contas" onclick="setSecao(this)"><span class="ni">📅</span>Contas a Vencer</button>
@@ -840,6 +860,7 @@ function logar(){
       <div><label>Quem pagou</label><select id="dom-quem"><option value="fabio">Fábio</option><option value="camila">Camila</option><option value="conjunto">Conjunto</option></select></div>
       <div><label>Pagamento</label><select id="dom-pag"><option value="credito">💳 Crédito</option><option value="debito">🏦 Débito/Pix</option><option value="dinheiro">💵 Dinheiro</option></select></div>
       <div><label>Data</label><input type="date" id="dom-data"/></div>
+      <div><label>Cartao/Conta usado</label><select id="dom-carteira"><option value="">— Nenhum —</option></select></div>
       <div class="full"><label>Obs (opcional)</label><input type="text" id="dom-obs" placeholder="Referência, parcela…"/></div>
       <div class="full"><button class="btn-add" onclick="add('domestico')">+ Adicionar Gasto Doméstico</button></div>
     </div>
@@ -1132,6 +1153,7 @@ function logar(){
     <button class="drawer-btn" data-sec="fabio" onclick="setSecaoDrawer(this)"><span class="di">👤</span>Fábio</button>
     <button class="drawer-btn" data-sec="camila" onclick="setSecaoDrawer(this)"><span class="di">👩</span>Camila</button>
     <button class="drawer-btn" data-sec="domestico" onclick="setSecaoDrawer(this)"><span class="di">🏠</span>Casa</button>
+    <button class="drawer-btn" data-sec="carteiras" onclick="setSecaoDrawer(this)"><span class="di">💳</span>Carteiras</button>
     <button class="drawer-btn" data-sec="reservas" onclick="setSecaoDrawer(this)"><span class="di">🛡️</span>Reservas</button>
     <button class="drawer-btn" data-sec="investimentos" onclick="setSecaoDrawer(this)"><span class="di">📈</span>Invest.</button>
     <button class="drawer-btn" data-sec="contas" onclick="setSecaoDrawer(this)"><span class="di">📅</span>Contas</button>
@@ -1357,6 +1379,7 @@ function setSecao(btn){
   if(btn.dataset.sec==='fontes')renderFontes();
   if(btn.dataset.sec==='recorrentes')renderRecorrentes();
   if(btn.dataset.sec==='receitas')renderFontes();
+  if(btn.dataset.sec==='carteiras')renderCarteiras();
 }
 function setSecaoMob(sec,btn){
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
@@ -1422,7 +1445,7 @@ const CAMPOS={
   fabio_pessoal:['fp-desc','fp-val','fp-cat','fp-pag','fp-data','fp-obs'],
   camila_diario:['cd-desc','cd-val','cd-cat','cd-pag','cd-data','cd-obs'],
   camila_pessoal:['cp-desc','cp-val','cp-cat','cp-pag','cp-data','cp-obs'],
-  domestico:['dom-desc','dom-val','dom-cat','dom-quem','dom-pag','dom-data','dom-obs'],
+  domestico:['dom-desc','dom-val','dom-cat','dom-quem','dom-pag','dom-data','dom-obs','dom-carteira'],
   lazer:['laz-desc','laz-val','laz-cat','laz-quem','laz-data','laz-obs'],
   investimento:['inv-desc','inv-val','inv-tipo','inv-quem','inv-data','inv-plat'],
   emergencia:['emerg-desc','emerg-val',null,null,'emerg-data','emerg-obs'],
@@ -2949,6 +2972,7 @@ async function init(){
   await aplicarRecorrentesNoMes();
   await renderFontes();
   await renderAll();
+  await renderCarteiras();
   await renderRecorrentes();
   await renderContas();
   await renderMural();
