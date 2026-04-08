@@ -29,7 +29,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .login-title{font-family:'Fraunces',serif;font-size:2rem;color:white;font-weight:300;margin-bottom:6px;font-style:italic;}
 .login-sub{color:rgba(255,255,255,.45);font-size:.85rem;margin-bottom:32px;}
-.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:white;font-family:'DM Mono',monospace;font-size:1.1rem;padding:14px 18px;text-align:center;letter-spacing:4px;outline:none;transition:border-color .2s;margin-bottom:14px;}
+.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:white;font-family:DM Mono,monospace;font-size:1.1rem;padding:14px 18px;text-align:center;letter-spacing:4px;outline:none;transition:border-color .2s;margin-bottom:14px;}
 .login-input:focus{border-color:rgba(255,255,255,.4);}
 .login-input::placeholder{letter-spacing:2px;font-size:.85rem;opacity:.4;}
 .login-btn{width:100%;background:white;color:#1c1a17;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;padding:14px;cursor:pointer;transition:opacity .2s;}
@@ -44,7 +44,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 .mes-ctrl{display:flex;align-items:center;gap:8px;}
 .mes-ctrl button{background:var(--bg2);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;}
 .mes-ctrl button:hover{background:var(--border);}
-#labelMes{font-family:'DM Mono',monospace;font-size:.78rem;min-width:120px;text-align:center;}
+#labelMes{font-family:DM Mono,monospace;font-size:.78rem;min-width:120px;text-align:center;}
 
 /* LAYOUT */
 .layout{display:flex;min-height:calc(100vh - 58px);}
@@ -123,7 +123,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 @media(max-width:480px){.resumo-nums{grid-template-columns:1fr 1fr;}}
 .rn{text-align:center;}
 .rn .rl{font-size:.62rem;opacity:.5;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
-.rn .rv{font-family:'DM Mono',monospace;font-size:.95rem;}
+.rn .rv{font-family:DM Mono,monospace;font-size:.95rem;}
 .saude-bar-wrap{margin-bottom:18px;}
 .saude-bar-top{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-bottom:5px;}
 .saude-bar-track{height:9px;background:var(--bg2);border-radius:99px;overflow:hidden;}
@@ -147,7 +147,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 .reservas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px;}
 .reserva-mini{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
 .reserva-mini .rlbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
-.reserva-mini .rval{font-family:'DM Mono',monospace;font-size:1.1rem;margin-bottom:2px;}
+.reserva-mini .rval{font-family:DM Mono,monospace;font-size:1.1rem;margin-bottom:2px;}
 .reserva-mini .rsub{font-size:.7rem;color:var(--muted);}
 
 /* DIST */
@@ -157,7 +157,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 .dist-card h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
 .dist-row{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;padding:5px 0;border-bottom:1px solid var(--bg2);}
 .dist-row:last-child{border:none;}
-.dist-row span:last-child{font-family:'DM Mono',monospace;font-size:.76rem;}
+.dist-row span:last-child{font-family:DM Mono,monospace;font-size:.76rem;}
 
 /* SUGESTÕES */
 .sugestoes-wrap{margin-bottom:18px;}
@@ -177,7 +177,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 .hist-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
 .hist-card .hm{font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:8px;}
 .hist-row{display:flex;justify-content:space-between;font-size:.72rem;padding:2px 0;}
-.hist-row span:last-child{font-family:'DM Mono',monospace;}
+.hist-row span:last-child{font-family:DM Mono,monospace;}
 
 /* RECEITAS */
 .renda-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
@@ -188,11 +188,11 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20
 .renda-card .rc-nome{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
 .renda-card.fabio .rc-nome{color:var(--fabio);}
 .renda-card.camila .rc-nome{color:var(--camila);}
-.renda-card .rc-val{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:400;margin-bottom:10px;}
+.renda-card .rc-val{font-family:DM Mono,monospace;font-size:1.5rem;font-weight:400;margin-bottom:10px;}
 .renda-card .rc-contrib{font-size:.74rem;color:var(--muted);margin-bottom:10px;}
 .renda-total{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
 .renda-total .lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;}
-.renda-total .vt{font-family:'DM Mono',monospace;font-size:1.25rem;color:var(--casal);}
+.renda-total .vt{font-family:DM Mono,monospace;font-size:1.25rem;color:var(--casal);}
 
 /* FORM */
 .form-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:18px;}
@@ -224,7 +224,7 @@ input:focus,select:focus{border-color:var(--casal);}
 .item-info{flex:1;min-width:0;}
 .item-nome{font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-meta{font-size:.67rem;color:var(--muted);margin-top:2px;}
-.item-val{font-family:'DM Mono',monospace;font-size:.9rem;white-space:nowrap;font-weight:500;}
+.item-val{font-family:DM Mono,monospace;font-size:.9rem;white-space:nowrap;font-weight:500;}
 .item-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 5px;border-radius:6px;font-size:.8rem;transition:color .15s,background .15s;}
 .item-del:hover{color:var(--emerg);background:#dc262618;}
 .vazio{text-align:center;color:var(--muted);padding:28px 0;font-size:.84rem;}
@@ -287,12 +287,12 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .rel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px;}
 .rel-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
 .rel-card .rl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
-.rel-card .rv{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;}
+.rel-card .rv{font-family:DM Mono,monospace;font-size:1.1rem;font-weight:500;}
 .rel-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
 .rel-section h3{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .rel-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg2);font-size:.83rem;}
 .rel-row:last-child{border:none;}
-.rel-row span:last-child{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;}
+.rel-row span:last-child{font-family:DM Mono,monospace;font-size:.8rem;font-weight:500;}
 .rel-bar-wrap{margin-bottom:8px;}
 .rel-bar-label{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px;}
 .rel-bar-track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;}
@@ -318,7 +318,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .mural-nota.camila-nota{border-left:4px solid var(--camila);}
 .mural-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .mural-autor{font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:6px;}
-.mural-hora{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+.mural-hora{font-size:.68rem;color:var(--muted);font-family:DM Mono,monospace;}
 .mural-msg{font-size:.86rem;line-height:1.55;color:var(--text);}
 .mural-lida{font-size:.65rem;color:var(--casal);font-weight:700;margin-top:5px;}
 .rapidas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
@@ -351,7 +351,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .conta-nome{font-weight:700;font-size:.88rem;}
 .conta-meta{font-size:.7rem;color:var(--muted);margin-top:2px;}
 .conta-right{text-align:right;flex-shrink:0;}
-.conta-valor{font-family:'DM Mono',monospace;font-size:.9rem;font-weight:500;}
+.conta-valor{font-family:DM Mono,monospace;font-size:.9rem;font-weight:500;}
 .conta-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:4px;display:block;margin-top:3px;}
 .badge-vencendo{background:#d9770618;color:var(--warn);}
 .badge-vencida{background:#dc262618;color:var(--emerg);}
@@ -382,7 +382,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .modal input,.modal select{margin-top:7px;}
 .mini-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
 .mini-card .lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
-.mini-card .val{font-family:'DM Mono',monospace;font-size:1rem;}
+.mini-card .val{font-family:DM Mono,monospace;font-size:1rem;}
 </style>
 </head>
 <body>
@@ -625,7 +625,7 @@ function logar(){
   </div>
   <div class="form-box" style="background:#2a7d4f08;border-color:#2a7d4f30">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda Total do Casal</div><div style="font-family:'DM Mono',monospace;font-size:1.4rem;color:var(--casal)" id="total-fontes-casal">R$ 0,00</div></div>
+      <div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda Total do Casal</div><div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--casal)" id="total-fontes-casal">R$ 0,00</div></div>
       <div id="fontes-composicao" style="font-size:.76rem;color:var(--muted)"></div>
     </div>
     <div id="fontes-meta-extra" style="margin-top:12px"></div>
@@ -702,6 +702,11 @@ function logar(){
 <!-- == FÁBIO == -->
 <section class="secao sec-fabio" id="sec-fabio">
   <div class="page-header"><h2>Área do Fábio Padote</h2><p>Gastos diários e pessoais — individual</p></div>
+  <div id="contrib-resumo-fabio" style="margin-bottom:16px"></div>
+  
+  <!-- RESUMO DOMÉSTICO DO FÁBIO -->
+  <div id="resumo-dom-fabio" style="margin-bottom:16px"></div>
+
   <div class="person-tabs">
     <button class="ptab ativo-f" onclick="setPTab('fabio','diario',this)">📅 Gastos Diários</button>
     <button class="ptab" onclick="setPTab('fabio','pessoal',this)">🧾 Gastos Pessoais</button>
@@ -747,6 +752,11 @@ function logar(){
 <!-- == CAMILA == -->
 <section class="secao sec-camila" id="sec-camila">
   <div class="page-header"><h2>Área da Camila Pâmela</h2><p>Gastos diários e pessoais — individual</p></div>
+  <div id="contrib-resumo-camila" style="margin-bottom:16px"></div>
+  
+  <!-- RESUMO DOMÉSTICO DA CAMILA -->
+  <div id="resumo-dom-camila" style="margin-bottom:16px"></div>
+
   <div class="person-tabs">
     <button class="ptab ativo-c" onclick="setPTab('camila','diario',this)">📅 Gastos Diários</button>
     <button class="ptab" onclick="setPTab('camila','pessoal',this)">🧾 Gastos Pessoais</button>
@@ -1149,143 +1159,100 @@ function logar(){
 // Enter key para login
 document.addEventListener('DOMContentLoaded',function(){var inp=document.getElementById('inputSenha');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')logar();});});
 
-// STORAGE — Firebase bidirecional com fila garantida
-var _fbReady = false;
-var _fbDB = null;
-var _fbQueue = {};
-var _fbSaving = false;
+// STORAGE — Firestore REST API (sem biblioteca, funciona em qualquer lugar)
+var FB_PROJECT = 'nosdois-financas';
+var FB_KEY = 'AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA';
+var FB_DOC = 'casal/dados';
+var FB_URL = 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT + '/databases/(default)/documents/' + FB_DOC + '?key=' + FB_KEY;
 
-// Salva fila no Firebase
-function flushQueue() {
-  if (!_fbReady || !_fbDB || _fbSaving) return;
-  var keys = Object.keys(_fbQueue);
-  if (keys.length === 0) return;
-  _fbSaving = true;
-  var toSave = {};
-  keys.forEach(function(k) { toSave[k] = _fbQueue[k]; });
-  _fbDB.collection('casal').doc('dados').set(toSave, {merge: true})
-    .then(function() {
-      // Remove saved keys from queue
-      keys.forEach(function(k) { delete _fbQueue[k]; });
-      _fbSaving = false;
-      console.log('Firebase: ' + keys.length + ' chave(s) salva(s)');
+// Convert value to Firestore format
+function toFB(v) {
+  return {stringValue: String(v)};
+}
+// Convert Firestore format to value
+function fromFB(f) {
+  if (!f) return null;
+  return f.stringValue || f.integerValue || f.doubleValue || null;
+}
+
+// Save to Firestore via REST
+function fbSave(key, value) {
+  var body = {fields: {}};
+  body.fields[key] = toFB(value);
+  fetch(FB_URL, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    if (r.ok) console.log('FB salvo: ' + key);
+    else r.text().then(function(t) { console.log('FB err:', t.substring(0,100)); });
+  }).catch(function(e) { console.log('FB save fail:', e.message); });
+}
+
+// Load ALL from Firestore via REST
+function fbLoad() {
+  return fetch(FB_URL + '&key=' + FB_KEY)
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(doc) {
+      if (!doc || !doc.fields) return;
+      var fields = doc.fields;
+      Object.keys(fields).forEach(function(k) {
+        var v = fromFB(fields[k]);
+        if (v !== null) {
+          var local = localStorage.getItem(k);
+          if (!local) {
+            localStorage.setItem(k, v);
+          } else {
+            // Merge arrays
+            try {
+              var la = JSON.parse(local);
+              var ca = JSON.parse(v);
+              if (Array.isArray(la) && Array.isArray(ca)) {
+                var merged = ca.slice();
+                la.forEach(function(item) {
+                  if (!merged.find(function(c) { return c.id === item.id; })) {
+                    merged.push(item);
+                  }
+                });
+                var ms = JSON.stringify(merged);
+                localStorage.setItem(k, ms);
+                fbSave(k, ms);
+              }
+            } catch(e) {}
+          }
+        }
+      });
+      console.log('FB carregado: ' + Object.keys(fields).length + ' chaves');
+      if (typeof renderAll === 'function') renderAll();
     })
-    .catch(function(e) {
-      _fbSaving = false;
-      console.log('Firebase save err:', e.message);
-      // Retry in 3 seconds
-      setTimeout(flushQueue, 3000);
-    });
+    .catch(function(e) { console.log('FB load fail:', e.message); });
+}
+
+// Push all local nd2_ keys to Firebase
+function fbPushAll() {
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('nd2_')) {
+      fbSave(k, localStorage.getItem(k));
+    }
+  }
 }
 
 const store = {
-  async get(k) {
-    return localStorage.getItem(k);
-  },
+  async get(k) { return localStorage.getItem(k); },
   async set(k, v) {
-    // Always save to localStorage first (instant)
     localStorage.setItem(k, v);
-    // Add to Firebase queue
-    _fbQueue[k] = v;
-    // Try to flush immediately
-    flushQueue();
+    fbSave(k, v);
   }
 };
 
-function initFirebase() {
-  try {
-    var cfg = {
-      apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
-      authDomain: "nosdois-financas.firebaseapp.com",
-      projectId: "nosdois-financas",
-      storageBucket: "nosdois-financas.firebasestorage.app",
-      messagingSenderId: "141934571983",
-      appId: "1:141934571983:web:8288980a9eba25df6f22ba"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    _fbDB = firebase.firestore();
-    _fbReady = true;
-    console.log('Firebase conectado!');
-
-    // Load ALL cloud data first, then merge with local
-    _fbDB.collection('casal').doc('dados').get()
-      .then(function(snap) {
-        if (snap.exists) {
-          var cloudData = snap.data();
-          var cloudKeys = Object.keys(cloudData);
-          console.log('Firebase: ' + cloudKeys.length + ' chaves na nuvem');
-          
-          // For each cloud key - use cloud data if local is empty
-          // or if cloud is newer (longer/different)
-          cloudKeys.forEach(function(k) {
-            var local = localStorage.getItem(k);
-            var cloud = cloudData[k];
-            if (!local) {
-              // No local data - use cloud
-              localStorage.setItem(k, cloud);
-            } else {
-              // Both exist - try to merge arrays
-              try {
-                var localArr = JSON.parse(local);
-                var cloudArr = JSON.parse(cloud);
-                if (Array.isArray(localArr) && Array.isArray(cloudArr)) {
-                  // Merge: keep all unique items by id
-                  var merged = cloudArr.slice();
-                  localArr.forEach(function(item) {
-                    if (!merged.find(function(c) { return c.id === item.id; })) {
-                      merged.push(item);
-                    }
-                  });
-                  var mergedStr = JSON.stringify(merged);
-                  localStorage.setItem(k, mergedStr);
-                  // Save merged back to Firebase
-                  _fbQueue[k] = mergedStr;
-                }
-              } catch(e) {
-                // Not array - keep local version
-              }
-            }
-          });
-          
-          // Flush any pending queue
-          flushQueue();
-          
-          // Refresh the UI with merged data
-          if (typeof renderAll === 'function') renderAll();
-        } else {
-          // No cloud data yet - push all local to cloud
-          var allLocal = {};
-          for (var i = 0; i < localStorage.length; i++) {
-            var k = localStorage.key(i);
-            if (k && k.startsWith('nd2_')) {
-              allLocal[k] = localStorage.getItem(k);
-              _fbQueue[k] = allLocal[k];
-            }
-          }
-          flushQueue();
-        }
-      })
-      .catch(function(e) {
-        console.log('Firebase load err:', e.message);
-        _fbReady = false;
-      });
-  } catch(e) {
-    console.log('Firebase init err:', e.message);
-  }
-}
-
-// Load Firebase after page is ready
+// Load Firebase data when page is ready
 window.addEventListener('load', function() {
-  var s1 = document.createElement('script');
-  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
-  s1.onload = function() {
-    var s2 = document.createElement('script');
-    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
-    s2.onload = function() { initFirebase(); };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s1);
+  fbLoad().then(function() {
+    fbPushAll();
+  });
 });
+
 
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 let mes=new Date().getMonth(),ano=new Date().getFullYear();
@@ -1465,6 +1432,44 @@ async function carregarRendas(){
   _rF=await r('fabio_renda');_cF=await r('fabio_contrib');
   _rC=await r('camila_renda');_cC=await r('camila_contrib');
 }
+function renderContribSummary(cache) {
+  var dom = cache ? cache.domestico || [] : [];
+  var totalDom = dom.reduce(function(a,g){return a+g.valor;},0);
+  
+  // Split: conjunto = 50/50, fabio = 100% fabio, camila = 100% camila
+  var domFabio = dom.filter(function(g){return g.quem==='fabio';}).reduce(function(a,g){return a+g.valor;},0);
+  var domCamila = dom.filter(function(g){return g.quem==='camila';}).reduce(function(a,g){return a+g.valor;},0);
+  var domConj = dom.filter(function(g){return g.quem==='conjunto'||g.quem==='casal';}).reduce(function(a,g){return a+g.valor;},0);
+  
+  var parteFabio = domFabio + (domConj/2);
+  var parteCamila = domCamila + (domConj/2);
+  
+  // Cards for each person
+  var cardF = document.getElementById('contrib-resumo-fabio');
+  if(cardF) cardF.innerHTML = '<div style="background:linear-gradient(135deg,#2d5be315,#2d5be308);border:1px solid #2d5be340;border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">' +
+    '<div>' +
+    '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--fabio);margin-bottom:4px">Sua parte do doméstico este mês</div>' +
+    '<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--fabio)">' + fmt(parteFabio) + '</div>' +
+    '<div style="font-size:.74rem;color:var(--muted);margin-top:4px">Suas contas: ' + fmt(domFabio) + ' + metade do conjunto: ' + fmt(domConj/2) + '</div>' +
+    '</div>' +
+    '<div style="text-align:right">' +
+    '<div style="font-size:.7rem;color:var(--muted)">Total doméstico</div>' +
+    '<div style="font-family:DM Mono,monospace;font-size:.95rem">' + fmt(totalDom) + '</div>' +
+    '</div></div>';
+
+  var cardC = document.getElementById('contrib-resumo-camila');
+  if(cardC) cardC.innerHTML = '<div style="background:linear-gradient(135deg,#d4538a15,#d4538a08);border:1px solid #d4538a40;border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">' +
+    '<div>' +
+    '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--camila);margin-bottom:4px">Parte da Camila no doméstico este mês</div>' +
+    '<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--camila)">' + fmt(parteCamila) + '</div>' +
+    '<div style="font-size:.74rem;color:var(--muted);margin-top:4px">Contas dela: ' + fmt(domCamila) + ' + metade do conjunto: ' + fmt(domConj/2) + '</div>' +
+    '</div>' +
+    '<div style="text-align:right">' +
+    '<div style="font-size:.7rem;color:var(--muted)">Total doméstico</div>' +
+    '<div style="font-family:DM Mono,monospace;font-size:.95rem">' + fmt(totalDom) + '</div>' +
+    '</div></div>';
+}
+
 function renderReceitas(){
   document.getElementById('rendaFabioEl').textContent=fmt(_rF);
   document.getElementById('rendaCamilaEl').textContent=fmt(_rC);
@@ -1723,8 +1728,8 @@ async function renderResumo(cache){
         <div class="dist-row">
           <span>${CAT_ICONS[g.cat||'outros']||'💼'} ${g.desc} <span style="font-size:.65rem;color:var(--muted)">${SLABELS[g._sec]||''}</span></span>
           <span style="display:flex;gap:12px">
-            <span style="color:var(--fabio);font-family:'DM Mono',monospace;font-size:.78rem">${fmt(g.metade)}</span>
-            <span style="color:var(--camila);font-family:'DM Mono',monospace;font-size:.78rem">${fmt(g.metade)}</span>
+            <span style="color:var(--fabio);font-family:DM Mono,monospace;font-size:.78rem">${fmt(g.metade)}</span>
+            <span style="color:var(--camila);font-family:DM Mono,monospace;font-size:.78rem">${fmt(g.metade)}</span>
           </span>
         </div>`).join('');
       balEl.innerHTML=`
@@ -1736,8 +1741,8 @@ async function renderResumo(cache){
         <div class="dist-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:6px;padding-top:8px">
           <span>Total conjunto (÷2 cada)</span>
           <span style="display:flex;gap:12px">
-            <span style="color:var(--fabio);font-family:'DM Mono',monospace;font-size:.82rem">${fmt(deveF)}</span>
-            <span style="color:var(--camila);font-family:'DM Mono',monospace;font-size:.82rem">${fmt(deveC)}</span>
+            <span style="color:var(--fabio);font-family:DM Mono,monospace;font-size:.82rem">${fmt(deveF)}</span>
+            <span style="color:var(--camila);font-family:DM Mono,monospace;font-size:.82rem">${fmt(deveC)}</span>
           </span>
         </div>`;
     }
@@ -1886,6 +1891,121 @@ async function carregarTodasCatsCustom(){
 }
 
 // RENDER ALL
+// Render domestic summary in each person's area
+async function renderResumoPessoal(cache){
+  var domGastos = cache.domestico || [];
+  var lazerGastos = cache.lazer || [];
+  var emergGastos = cache.emergencia || [];
+  var dogsGastos = cache.dogs || [];
+
+  // Calculate each person's share
+  // Conjunto = 50/50
+  // Named person = 100% theirs
+  function calcShare(lista, pessoa){
+    var total = 0;
+    var itens = [];
+    lista.forEach(function(g){
+      if(g.quem === 'conjunto' || g.quem === 'casal'){
+        total += g.valor/2;
+        itens.push({desc:g.desc, val:g.valor/2, tipo:'conjunto'});
+      } else if(g.quem === pessoa){
+        total += g.valor;
+        itens.push({desc:g.desc, val:g.valor, tipo:'individual'});
+      }
+    });
+    return {total:total, itens:itens};
+  }
+
+  // Gastos pessoais lançados pelo outro para esta pessoa
+  function getGastosParaPessoa(lista, pessoa){
+    return lista.filter(function(g){ return g.quem === pessoa; });
+  }
+
+  // Build HTML for person summary
+  function buildHtml(pessoa, cor, domShare, lazerShare, emergShare, dogsShare, pessoalDoOutro){
+    var totalDom = domShare.total + lazerShare.total + emergShare.total + dogsShare.total;
+    var nomeDisplay = pessoa === 'fabio' ? 'Fábio' : 'Camila';
+    
+    if(totalDom === 0 && pessoalDoOutro.length === 0) return '';
+    
+    var html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:8px;">';
+    html += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px">🏠 Sua parte nos gastos conjuntos</div>';
+    
+    if(domShare.total > 0){
+      html += '<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid var(--bg2)">';
+      html += '<span>🏠 Doméstico (sua parte)</span>';
+      html += '<span style="font-family:DM Mono,monospace;color:var(--emerg)">'+fmt(domShare.total)+'</span></div>';
+    }
+    if(lazerShare.total > 0){
+      html += '<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid var(--bg2)">';
+      html += '<span>🎡 Lazer (sua parte)</span>';
+      html += '<span style="font-family:DM Mono,monospace;color:var(--lazer)">'+fmt(lazerShare.total)+'</span></div>';
+    }
+    if(emergShare.total > 0){
+      html += '<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid var(--bg2)">';
+      html += '<span>🚨 Emergência (sua parte)</span>';
+      html += '<span style="font-family:DM Mono,monospace;color:var(--emerg)">'+fmt(emergShare.total)+'</span></div>';
+    }
+    if(dogsShare.total > 0){
+      html += '<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid var(--bg2)">';
+      html += '<span>🐾 Dogs (sua parte)</span>';
+      html += '<span style="font-family:DM Mono,monospace;color:var(--dogs)">'+fmt(dogsShare.total)+'</span></div>';
+    }
+    
+    // Total
+    if(totalDom > 0){
+      html += '<div style="display:flex;justify-content:space-between;font-size:.88rem;font-weight:700;padding:8px 0 4px;margin-top:4px;border-top:2px solid var(--border)">';
+      html += '<span>Total a depositar na conta conjunta</span>';
+      html += '<span style="font-family:DM Mono,monospace;color:var(--casal)">'+fmt(totalDom)+'</span></div>';
+    }
+
+    // Gastos lançados pelo outro para esta pessoa
+    if(pessoalDoOutro.length > 0){
+      html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+      html += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">💳 Gastos no seu nome</div>';
+      pessoalDoOutro.forEach(function(g){
+        html += '<div style="display:flex;justify-content:space-between;font-size:.8rem;padding:3px 0">';
+        html += '<span>'+g.desc+'</span>';
+        html += '<span style="font-family:DM Mono,monospace;color:var(--emerg)">'+fmt(g.valor)+'</span></div>';
+      });
+      html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+  }
+
+  // Fabio
+  var fabioEl = document.getElementById('resumo-dom-fabio');
+  if(fabioEl){
+    var fDom = calcShare(domGastos, 'fabio');
+    var fLaz = calcShare(lazerGastos, 'fabio');
+    var fEmerg = calcShare(emergGastos, 'fabio');
+    var fDogs = calcShare(dogsGastos, 'fabio');
+    // Gastos pessoais lançados para o Fabio (de qualquer seção)
+    var paraFabio = [];
+    ['camila_pessoal','camila_diario'].forEach(function(sec){
+      (cache[sec]||[]).forEach(function(g){ if(g.quem==='fabio') paraFabio.push(g); });
+    });
+    fabioEl.innerHTML = buildHtml('fabio','var(--fabio)',fDom,fLaz,fEmerg,fDogs,paraFabio);
+  }
+
+  // Camila
+  var camilaEl = document.getElementById('resumo-dom-camila');
+  if(camilaEl){
+    var cDom = calcShare(domGastos, 'camila');
+    var cLaz = calcShare(lazerGastos, 'camila');
+    var cEmerg = calcShare(emergGastos, 'camila');
+    var cDogs = calcShare(dogsGastos, 'camila');
+    // Gastos pessoais lançados para a Camila
+    var paraCamila = [];
+    ['fabio_pessoal','fabio_diario'].forEach(function(sec){
+      (cache[sec]||[]).forEach(function(g){ if(g.quem==='camila') paraCamila.push(g); });
+    });
+    camilaEl.innerHTML = buildHtml('camila','var(--camila)',cDom,cLaz,cEmerg,cDogs,paraCamila);
+  }
+}
+
 async function renderAll(){
   await carregarRendas();
   const dados=await Promise.all(TIPOS.map(t=>carregar(t)));
@@ -1893,10 +2013,12 @@ async function renderAll(){
   TIPOS.forEach((t,i)=>window._cache[t]=dados[i]);
   TIPOS.forEach(t=>renderLista(t,window._cache[t]));
   renderReceitas();
+  renderContribSummary(window._cache);
   await renderResumo(window._cache);
   await renderReservas();
   await renderInvResumo();
   await renderMetas();
+  await renderResumoPessoal(window._cache);
 }
 
 //============================================
@@ -2157,7 +2279,7 @@ async function renderRelatorio(){
     <div class="rel-card"><div class="rl" style="color:var(--fabio)">👤 Fábio Padote</div><div class="rv" style="color:var(--fabio);margin-bottom:6px">${fmt(arcaF)}</div><div style="font-size:.73rem;color:var(--muted)">Diário: ${fmt(tFD)}<br>Pessoal: ${fmt(tFP)}<br>½ Conjunto: ${fmt(conj)}</div></div>
     <div class="rel-card"><div class="rl" style="color:var(--camila)">👩 Camila Pâmela</div><div class="rv" style="color:var(--camila);margin-bottom:6px">${fmt(arcaC)}</div><div style="font-size:.73rem;color:var(--muted)">Diário: ${fmt(tCD)}<br>Pessoal: ${fmt(tCP)}<br>½ Conjunto: ${fmt(conj)}</div></div>`;
   const maxV=Math.max(tFD+tFP,tCD+tCP,tDom,tLaz,tInv,1);
-  const bar=(l,v,c)=>`<div class="rel-bar-wrap"><div class="rel-bar-label"><span>${l}</span><span style="font-family:'DM Mono',monospace">${fmt(v)}</span></div><div class="rel-bar-track"><div class="rel-bar-fill" style="width:${(v/maxV*100).toFixed(0)}%;background:${c}"></div></div></div>`;
+  const bar=(l,v,c)=>`<div class="rel-bar-wrap"><div class="rel-bar-label"><span>${l}</span><span style="font-family:DM Mono,monospace">${fmt(v)}</span></div><div class="rel-bar-track"><div class="rel-bar-fill" style="width:${(v/maxV*100).toFixed(0)}%;background:${c}"></div></div></div>`;
   const DCATS={aluguel:'🏠 Aluguel',financiamento_casa:'🏦 Financ.Casa',financiamento_moto:'🏍️ Financ.Moto',alimentacao:'🛒 Alimentação',internet:'📶 Internet',agua:'💧 Água',luz:'⚡ Luz',gas:'🔥 Gás',limpeza:'🧹 Limpeza',outros:'📦 Outros'};
   const domRows=Object.entries(DCATS).map(([k,l])=>{const v=cache.domestico.filter(g=>g.cat===k).reduce((a,g)=>a+g.valor,0);return v?`<div class="rel-row"><span>${l}</span><span>${fmt(v)}</span></div>`:''}).join('');
   const conteudo=document.getElementById('relConteudoEl');
@@ -2335,7 +2457,7 @@ async function renderRecorrentes(){
   if(compEl&&totalFixo>0){
     compEl.innerHTML=`<div class="form-box" style="background:#dc262608;border-color:#dc262630">
       <div class="form-tit"><span class="bar" style="background:var(--emerg)"></span>⚠️ Compromissos fixos este mês</div>
-      <div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--emerg);margin-bottom:8px">${fmt(totalFixo)}</div>
+      <div style="font-family:DM Mono,monospace;font-size:1.3rem;color:var(--emerg);margin-bottom:8px">${fmt(totalFixo)}</div>
       <div style="font-size:.76rem;color:var(--muted)">${ativos.length} gasto(s) recorrente(s) ativo(s) — já lançados automaticamente neste mês</div>
     </div>`;
   } else if(compEl){compEl.innerHTML='';}
