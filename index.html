@@ -9,10 +9,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Nós Dois"/>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-(function(){
+// Firebase carrega de forma segura
+window._fbDB = null;
+window._fbReady = false;
+function _initFirebase(){
   try{
     var cfg={
       apiKey:"AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
@@ -22,15 +23,19 @@
       messagingSenderId:"141934571983",
       appId:"1:141934571983:web:8288980a9eba25df6f22ba"
     };
+    if(typeof firebase === 'undefined'){ console.warn('Firebase SDK nao carregou'); return; }
     if(!firebase.apps.length) firebase.initializeApp(cfg);
     window._fbDB = firebase.firestore();
-    console.log('Firebase inicializado no HEAD');
+    window._fbReady = true;
+    console.log('Firebase OK');
   }catch(e){
-    console.warn('Firebase HEAD err:',e.message);
+    console.warn('Firebase err:',e.message);
     window._fbDB = null;
   }
-})();
+}
 </script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" onload=""></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" onload="_initFirebase()"></script>
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTsOzcyBEb2lzIOKAlCBGaW5hbsOnYXMiLCJzaG9ydF9uYW1lIjoiTsOzcyBEb2lzIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmYWY4ZjQiLCJ0aGVtZV9jb2xvciI6IiMyYTdkNGYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIHJ4PScyMCcgZmlsbD0nJTIzMmE3ZDRmJy8lM0UlM0N0ZXh0IHk9Jy43ZW0nIGZvbnQtc2l6ZT0nNjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIHg9JzUwJyUzRSVGMCU5RiVBNCU4RCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiYW55IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
