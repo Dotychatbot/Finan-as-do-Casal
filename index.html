@@ -1149,38 +1149,54 @@ function logar(){
 // Enter key para login
 document.addEventListener('DOMContentLoaded',function(){var inp=document.getElementById('inputSenha');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')logar();});});
 
-// STORAGE — localStorage primeiro, Firebase sync em background
-const store = {
-  async get(k) { 
-    return localStorage.getItem(k); 
-  },
-  async set(k, v) { 
-    localStorage.setItem(k, v);
-    // Sync to Firebase in background (nao bloqueia nada)
-    fbSync(k, v);
-  }
-};
-
-// Firebase sync - completamente separado, nao afeta nada
+// STORAGE — Firebase bidirecional com fila garantida
 var _fbReady = false;
 var _fbDB = null;
 var _fbQueue = {};
+var _fbSaving = false;
 
-function fbSync(k, v) {
-  _fbQueue[k] = v;
-  if (_fbReady && _fbDB) {
-    try {
-      _fbDB.collection('casal').doc('dados').set(_fbQueue, {merge: true})
-        .catch(function(e) { console.log('FB sync err:', e.message); });
-    } catch(e) {}
-  }
+// Salva fila no Firebase
+function flushQueue() {
+  if (!_fbReady || !_fbDB || _fbSaving) return;
+  var keys = Object.keys(_fbQueue);
+  if (keys.length === 0) return;
+  _fbSaving = true;
+  var toSave = {};
+  keys.forEach(function(k) { toSave[k] = _fbQueue[k]; });
+  _fbDB.collection('casal').doc('dados').set(toSave, {merge: true})
+    .then(function() {
+      // Remove saved keys from queue
+      keys.forEach(function(k) { delete _fbQueue[k]; });
+      _fbSaving = false;
+      console.log('Firebase: ' + keys.length + ' chave(s) salva(s)');
+    })
+    .catch(function(e) {
+      _fbSaving = false;
+      console.log('Firebase save err:', e.message);
+      // Retry in 3 seconds
+      setTimeout(flushQueue, 3000);
+    });
 }
+
+const store = {
+  async get(k) {
+    return localStorage.getItem(k);
+  },
+  async set(k, v) {
+    // Always save to localStorage first (instant)
+    localStorage.setItem(k, v);
+    // Add to Firebase queue
+    _fbQueue[k] = v;
+    // Try to flush immediately
+    flushQueue();
+  }
+};
 
 function initFirebase() {
   try {
     var cfg = {
       apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
-      authDomain: "nosdois-financas.firebaseapp.com", 
+      authDomain: "nosdois-financas.firebaseapp.com",
       projectId: "nosdois-financas",
       storageBucket: "nosdois-financas.firebasestorage.app",
       messagingSenderId: "141934571983",
@@ -1189,25 +1205,76 @@ function initFirebase() {
     if (!firebase.apps.length) firebase.initializeApp(cfg);
     _fbDB = firebase.firestore();
     _fbReady = true;
-    console.log('Firebase pronto para sync');
-    // Load cloud data and merge with localStorage
-    _fbDB.collection('casal').doc('dados').get().then(function(snap) {
-      if (snap.exists) {
-        var data = snap.data();
-        Object.keys(data).forEach(function(k) {
-          if (!localStorage.getItem(k)) {
-            localStorage.setItem(k, data[k]);
+    console.log('Firebase conectado!');
+
+    // Load ALL cloud data first, then merge with local
+    _fbDB.collection('casal').doc('dados').get()
+      .then(function(snap) {
+        if (snap.exists) {
+          var cloudData = snap.data();
+          var cloudKeys = Object.keys(cloudData);
+          console.log('Firebase: ' + cloudKeys.length + ' chaves na nuvem');
+          
+          // For each cloud key - use cloud data if local is empty
+          // or if cloud is newer (longer/different)
+          cloudKeys.forEach(function(k) {
+            var local = localStorage.getItem(k);
+            var cloud = cloudData[k];
+            if (!local) {
+              // No local data - use cloud
+              localStorage.setItem(k, cloud);
+            } else {
+              // Both exist - try to merge arrays
+              try {
+                var localArr = JSON.parse(local);
+                var cloudArr = JSON.parse(cloud);
+                if (Array.isArray(localArr) && Array.isArray(cloudArr)) {
+                  // Merge: keep all unique items by id
+                  var merged = cloudArr.slice();
+                  localArr.forEach(function(item) {
+                    if (!merged.find(function(c) { return c.id === item.id; })) {
+                      merged.push(item);
+                    }
+                  });
+                  var mergedStr = JSON.stringify(merged);
+                  localStorage.setItem(k, mergedStr);
+                  // Save merged back to Firebase
+                  _fbQueue[k] = mergedStr;
+                }
+              } catch(e) {
+                // Not array - keep local version
+              }
+            }
+          });
+          
+          // Flush any pending queue
+          flushQueue();
+          
+          // Refresh the UI with merged data
+          if (typeof renderAll === 'function') renderAll();
+        } else {
+          // No cloud data yet - push all local to cloud
+          var allLocal = {};
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.startsWith('nd2_')) {
+              allLocal[k] = localStorage.getItem(k);
+              _fbQueue[k] = allLocal[k];
+            }
           }
-        });
-        console.log('Dados da nuvem carregados');
-      }
-    }).catch(function(e) { console.log('FB load err:', e.message); });
+          flushQueue();
+        }
+      })
+      .catch(function(e) {
+        console.log('Firebase load err:', e.message);
+        _fbReady = false;
+      });
   } catch(e) {
-    console.log('Firebase nao disponivel:', e.message);
+    console.log('Firebase init err:', e.message);
   }
 }
 
-// Load Firebase scripts AFTER page loads - does not block anything
+// Load Firebase after page is ready
 window.addEventListener('load', function() {
   var s1 = document.createElement('script');
   s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
