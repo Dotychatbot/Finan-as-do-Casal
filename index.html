@@ -7,8 +7,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
+(function(){
   try {
-    const firebaseConfig = {
+    var cfg = {
       apiKey: "AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
       authDomain: "nosdois-financas.firebaseapp.com",
       projectId: "nosdois-financas",
@@ -16,14 +17,14 @@
       messagingSenderId: "141934571983",
       appId: "1:141934571983:web:8288980a9eba25df6f22ba"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
     window._db = firebase.firestore();
-    window._firebaseReady = true;
     console.log('Firebase OK');
   } catch(e) {
-    console.warn('Firebase erro:', e);
-    window._firebaseReady = true;
+    console.warn('Firebase indisponivel, usando localStorage:', e.message);
+    window._db = null;
   }
+})();
 </script>
 <meta name="theme-color" content="#2a7d4f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -414,7 +415,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
     <div class="login-title">Nós Dois</div>
     <div class="login-sub">Finanças do casal — acesso exclusivo</div>
     <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30"/>
-    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
+    <button class="login-btn" id="login-btn-main">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -1142,49 +1143,49 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 const SENHA='Mus@s2026';
 
 function tentarLogin(){
-  const val = document.getElementById('inputSenha').value.trim();
+  const val = document.getElementById('inputSenha').value;
   if(val === SENHA){
     document.getElementById('telaLogin').style.display='none';
     document.getElementById('telaApp').style.display='block';
     init();
   } else {
-    document.getElementById('loginErr').textContent='Senha incorreta. Tente novamente.';
+    document.getElementById('loginErr').textContent='Senha incorreta.';
     document.getElementById('inputSenha').value='';
-    document.getElementById('inputSenha').focus();
   }
 }
-document.getElementById('inputSenha').addEventListener('keydown',e=>{if(e.key==='Enter')tentarLogin();});
+document.getElementById('inputSenha').addEventListener('keydown',function(e){
+  if(e.key==='Enter') tentarLogin();
+});
+document.getElementById('login-btn-main').addEventListener('click', tentarLogin);
 
-// STORAGE — Firebase compat + localStorage fallback
-const FIREBASE_DOC_ID = 'nosdois_dados';
+// STORAGE — Firebase Firestore + localStorage fallback
+const _DOC = 'nosdois_v1';
+const _cache = {};
 
-async function fbGet(key){
-  try{
-    if(window._db){
-      const snap = await window._db.collection('app').doc(FIREBASE_DOC_ID).get();
-      if(snap.exists){
-        const data = snap.data();
-        return data[key] !== undefined ? String(data[key]) : null;
+const store = {
+  async get(k) {
+    if (_cache[k] !== undefined) return _cache[k];
+    try {
+      if (window._db) {
+        const snap = await window._db.collection('casal').doc(_DOC).get();
+        if (snap.exists) {
+          const all = snap.data() || {};
+          Object.assign(_cache, all);
+          return all[k] !== undefined ? all[k] : localStorage.getItem(k);
+        }
       }
-    }
-  }catch(e){console.warn('FB get err:',e);}
-  return localStorage.getItem(key);
-}
-
-async function fbSet(key, value){
-  try{
-    if(window._db){
-      await window._db.collection('app').doc(FIREBASE_DOC_ID).set({[key]: value},{merge:true});
-      localStorage.setItem(key, value);
-      return;
-    }
-  }catch(e){console.warn('FB set err:',e);}
-  localStorage.setItem(key, value);
-}
-
-const store={
-  async get(k){return fbGet(k);},
-  async set(k,v){return fbSet(k,v);}
+    } catch(e) { console.warn('get err', e.message); }
+    return localStorage.getItem(k);
+  },
+  async set(k, v) {
+    _cache[k] = v;
+    localStorage.setItem(k, v);
+    try {
+      if (window._db) {
+        await window._db.collection('casal').doc(_DOC).set({[k]: v}, {merge: true});
+      }
+    } catch(e) { console.warn('set err', e.message); }
+  }
 };
 
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
