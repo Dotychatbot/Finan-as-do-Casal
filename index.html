@@ -1330,6 +1330,7 @@ function setSecao(btn){
   if(btn.dataset.sec==='mural')renderMural();
   if(btn.dataset.sec==='fontes')renderFontes();
   if(btn.dataset.sec==='recorrentes')renderRecorrentes();
+  if(btn.dataset.sec==='receitas')renderFontes();
 }
 function setSecaoMob(sec,btn){
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('ativo'));
@@ -2583,45 +2584,161 @@ async function verificarMuralAoAbrir(){
 }
 
 // FONTES DE RENDA
-async function carregarFontes(pessoa){const r=await store.get(chaveG('fontes_'+pessoa));return r?JSON.parse(r):[];}
-async function salvarFontes(pessoa,d){await store.set(chaveG('fontes_'+pessoa),JSON.stringify(d));}
+async function carregarFontes(pessoa){
+  var r = await store.get(chaveG('fontes_'+pessoa));
+  return r ? JSON.parse(r) : [];
+}
+async function salvarFontes(pessoa,d){
+  await store.set(chaveG('fontes_'+pessoa), JSON.stringify(d));
+}
 async function addFonte(pessoa){
-  const p=pessoa==='fabio'?'frf':'frc';
-  const desc=document.getElementById(p+'-desc').value.trim();
-  const val=parseFloat(document.getElementById(p+'-val').value)||0;
-  const tipo=document.getElementById(p+'-tipo').value;
-  if(!desc||!val){alert('Preencha descrição e valor!');return;}
-  const fontes=await carregarFontes(pessoa);
-  fontes.push({id:Date.now(),desc,val,tipo});
-  await salvarFontes(pessoa,fontes);
+  var p = pessoa==='fabio'?'frf':'frc';
+  var desc = document.getElementById(p+'-desc').value.trim();
+  var val = parseFloat(document.getElementById(p+'-val').value)||0;
+  var tipo = document.getElementById(p+'-tipo').value;
+  if(!desc||!val){alert('Preencha descricao e valor!');return;}
+  var fontes = await carregarFontes(pessoa);
+  fontes.push({id:Date.now(),desc:desc,val:val,tipo:tipo,mes:mes,ano:ano});
+  await salvarFontes(pessoa, fontes);
   document.getElementById(p+'-desc').value='';
   document.getElementById(p+'-val').value='';
   await renderFontes();
+  await renderAll();
 }
 async function delFonte(pessoa,id){
-  const f=(await carregarFontes(pessoa)).filter(x=>x.id!==id);
-  await salvarFontes(pessoa,f);
+  var f = (await carregarFontes(pessoa)).filter(function(x){return x.id!==id;});
+  await salvarFontes(pessoa, f);
+  await renderFontes();
+  await renderAll();
+}
+
+async function salvarMetaVar(){
+  var mf = parseFloat(document.getElementById('meta-var-fabio').value)||0;
+  var mc = parseFloat(document.getElementById('meta-var-camila').value)||0;
+  await store.set(chaveM('meta_var_fabio'), String(mf));
+  await store.set(chaveM('meta_var_camila'), String(mc));
   await renderFontes();
 }
+
 async function renderFontes(){
-  const [ff,fc]=await Promise.all([carregarFontes('fabio'),carregarFontes('camila')]);
-  const totalF=ff.reduce((a,f)=>a+f.val,0);
-  const totalC=fc.reduce((a,f)=>a+f.val,0);
-  const total=totalF+totalC;
-  const fixaF=ff.filter(f=>f.tipo==='fixa').reduce((a,f)=>a+f.val,0);
-  const fixaC=fc.filter(f=>f.tipo==='fixa').reduce((a,f)=>a+f.val,0);
-  const renderList=(fontes,pessoa,el)=>{
-    const div=document.getElementById(el);if(!div)return;
-    if(!fontes.length){div.innerHTML='<div class="vazio" style="padding:12px 0">Nenhuma fonte cadastrada</div>';return;}
-    div.innerHTML=fontes.map(f=>`<div class="item" style="margin-bottom:6px"><div class="item-ic">${f.tipo==='fixa'?'🔒':'📈'}</div><div class="item-info"><div class="item-nome">${f.desc}</div><div class="item-meta">${f.tipo==='fixa'?'Fixa':'Variável'}</div></div><div class="item-val ${pessoa}" style="color:var(--${pessoa})">${fmt(f.val)}</div><button class="item-del" onclick="delFonte('${pessoa}',${f.id})">✕</button></div>`).join('');
-  };
-  renderList(ff,'fabio','lista-fontes-fabio');
-  renderList(fc,'camila','lista-fontes-camila');
-  const tf=document.getElementById('total-fontes-fabio');if(tf)tf.textContent=fmt(totalF);
-  const tc=document.getElementById('total-fontes-camila');if(tc)tc.textContent=fmt(totalC);
-  const tt=document.getElementById('total-fontes-casal');if(tt)tt.textContent=fmt(total);
-  const comp=document.getElementById('fontes-composicao');
-  if(comp)comp.innerHTML=total>0?`Fixa garantida: <strong style="color:var(--casal)">${fmt(fixaF+fixaC)}</strong> · Variável: <strong style="color:var(--warn)">${fmt(total-fixaF-fixaC)}</strong>`:'';
+  var ff = await carregarFontes('fabio');
+  var fc = await carregarFontes('camila');
+
+  // Filter for current month or permanent (no mes/ano)
+  var ffMes = ff.filter(function(f){return !f.mes||(f.mes===mes&&f.ano===ano);});
+  var fcMes = fc.filter(function(f){return !f.mes||(f.mes===mes&&f.ano===ano);});
+
+  var fixaF = ffMes.filter(function(f){return f.tipo==='fixa';}).reduce(function(a,f){return a+f.val;},0);
+  var varF = ffMes.filter(function(f){return f.tipo==='variavel';}).reduce(function(a,f){return a+f.val;},0);
+  var totalF = fixaF + varF;
+
+  var fixaC = fcMes.filter(function(f){return f.tipo==='fixa';}).reduce(function(a,f){return a+f.val;},0);
+  var varC = fcMes.filter(function(f){return f.tipo==='variavel';}).reduce(function(a,f){return a+f.val;},0);
+  var totalC = fixaC + varC;
+
+  // Update global renda values for other calculations
+  _rF = totalF;
+  _rC = totalC;
+
+  // Get recorrentes deductions
+  var recs = [];
+  try { recs = JSON.parse(localStorage.getItem(chaveG('recorrentes'))||'[]'); } catch(e){}
+  var recAtivos = recs.filter(function(r){return recorrenteAtivo(r);});
+  var recFabio = recAtivos.filter(function(r){return r.secao==='fabio_pessoal';}).reduce(function(a,r){return a+r.val;},0);
+  var recCamila = recAtivos.filter(function(r){return r.secao==='camila_pessoal';}).reduce(function(a,r){return a+r.val;},0);
+  var recDom = recAtivos.filter(function(r){return r.secao==='domestico';}).reduce(function(a,r){return a+r.val;},0);
+
+  var dispF = fixaF - _cF - recFabio - recDom/2;
+  var dispFTotal = totalF - _cF - recFabio - recDom/2;
+  var dispC = fixaC - _cC - recCamila - recDom/2;
+  var dispCTotal = totalC - _cC - recCamila - recDom/2;
+
+  // Meta variavel
+  var metaVF = parseFloat(await store.get(chaveM('meta_var_fabio'))||'0')||0;
+  var metaVC = parseFloat(await store.get(chaveM('meta_var_camila'))||'0')||0;
+  if(metaVF) document.getElementById('meta-var-fabio').value = metaVF;
+  if(metaVC) document.getElementById('meta-var-camila').value = metaVC;
+
+  function fontesList(fontes, pessoa) {
+    var cor = pessoa==='fabio'?'var(--fabio)':'var(--camila)';
+    if(!fontes.length) return '<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma fonte cadastrada</div>';
+    return fontes.map(function(f){
+      return '<div class="item" style="margin-bottom:5px">'+
+        '<div class="item-ic">'+(f.tipo==='fixa'?'🔒':'📈')+'</div>'+
+        '<div class="item-info"><div class="item-nome">'+f.desc+'</div>'+
+        '<div class="item-meta">'+(f.tipo==='fixa'?'Fixa garantida':'Variavel/extra')+'</div></div>'+
+        '<div class="item-val" style="color:'+cor+'">'+fmt(f.val)+'</div>'+
+        '<button class="item-del" data-pessoa="'+pessoa+'" data-id="'+f.id+'" onclick="delFonteBtn(this)">&#x2715;</button>'+
+        '</div>';
+    }).join('');
+  }
+
+  function detalheCard(pessoa, fixa, variavel, total, contrib, recPess, recDomHalf, dispFixa, dispTotal, metaVar, cor) {
+    var pct = total>0?Math.min((contrib+recPess+recDomHalf)/total*100,100).toFixed(0):0;
+    var barCor = pct>90?'var(--emerg)':pct>70?'var(--warn)':'var(--casal)';
+    var metaHtml = '';
+    if(metaVar>0){
+      var mpct = Math.min(variavel/metaVar*100,100).toFixed(0);
+      metaHtml = '<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-bottom:3px"><span>Meta variavel: '+fmt(metaVar)+'</span><span>'+mpct+'%</span></div>'+
+        '<div style="height:5px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:var(--warn);width:'+mpct+'%"></div></div></div>';
+    }
+    return '<div style="background:'+cor+'10;border:1px solid '+cor+'30;border-radius:12px;padding:14px">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+      '<div class="mini-card"><div class="lbl">Fixa garantida</div><div class="val" style="color:var(--casal)">'+fmt(fixa)+'</div></div>'+
+      '<div class="mini-card"><div class="lbl">Variavel/bicos</div><div class="val" style="color:var(--warn)">'+fmt(variavel)+'</div></div>'+
+      '<div class="mini-card"><div class="lbl">(-) Domestico</div><div class="val" style="color:var(--emerg)">-'+fmt(contrib+recDomHalf)+'</div></div>'+
+      '<div class="mini-card"><div class="lbl">(-) Recorrentes</div><div class="val" style="color:var(--emerg)">-'+fmt(recPess)+'</div></div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+      '<span style="font-size:.8rem;font-weight:700">Disponivel (so fixo)</span>'+
+      '<span style="font-family:DM Mono,monospace;font-size:1rem;color:'+(dispFixa>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(dispFixa)+'</span>'+
+      '</div>'+
+      (dispFixa!==dispTotal?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<span style="font-size:.78rem;color:var(--muted)">Disponivel (com variavel)</span>'+
+      '<span style="font-family:DM Mono,monospace;font-size:.9rem;color:'+(dispTotal>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(dispTotal)+'</span>'+
+      '</div>':'')+
+      (dispFixa<0?'<div style="background:var(--emerg)15;border:1px solid var(--emerg)30;border-radius:8px;padding:8px;font-size:.76rem;color:var(--emerg);margin-bottom:8px">⚠️ Atencao: compromissos fixos maiores que a renda fixa!</div>':'')+
+      (dispTotal>0?'<div style="background:var(--casal)10;border:1px solid var(--casal)20;border-radius:8px;padding:8px;font-size:.76rem;color:var(--casal);margin-bottom:8px">💡 Sugestao: invista '+fmt(dispTotal*0.1)+' (10%) este mes!</div>':'')+
+      '<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-bottom:3px"><span>'+pct+'% comprometido da renda total</span></div>'+
+      '<div style="height:6px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:'+barCor+';width:'+pct+'%"></div></div></div>'+
+      metaHtml+'</div>';
+  }
+
+  // Render lists
+  var lf = document.getElementById('lista-fontes-fabio');
+  if(lf) lf.innerHTML = fontesList(ffMes, 'fabio');
+  var lc = document.getElementById('lista-fontes-camila');
+  if(lc) lc.innerHTML = fontesList(fcMes, 'camila');
+
+  // Render detail cards
+  var df = document.getElementById('receita-detalhe-fabio');
+  if(df) df.innerHTML = detalheCard('fabio', fixaF, varF, totalF, _cF, recFabio, recDom/2, dispF, dispFTotal, metaVF, '#2d5be3');
+  var dc = document.getElementById('receita-detalhe-camila');
+  if(dc) dc.innerHTML = detalheCard('camila', fixaC, varC, totalC, _cC, recCamila, recDom/2, dispC, dispCTotal, metaVC, '#d4538a');
+
+  // Total casal
+  var tc = document.getElementById('receita-total-casal');
+  if(tc) tc.innerHTML = '<div style="background:var(--casal)10;border:1px solid var(--casal)30;border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">'+
+    '<div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda total do casal</div>'+
+    '<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--casal)">'+fmt(totalF+totalC)+'</div>'+
+    '<div style="font-size:.74rem;color:var(--muted);margin-top:2px">Fixa: '+fmt(fixaF+fixaC)+' | Variavel: '+fmt(varF+varC)+'</div></div>'+
+    '<div style="text-align:right"><div style="font-size:.7rem;color:var(--muted)">Fundo domestico</div>'+
+    '<div style="font-family:DM Mono,monospace;font-size:.95rem">'+fmt(_cF+_cC)+'</div></div></div>';
+
+  // Meta variavel resumo
+  var mvr = document.getElementById('meta-var-resumo');
+  if(mvr && (metaVF>0||metaVC>0)){
+    mvr.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+      (metaVF>0?'<div class="mini-card"><div class="lbl">Fabio - variavel</div><div class="val" style="color:var(--warn)">'+fmt(varF)+'/'+fmt(metaVF)+'</div></div>':'')+
+      (metaVC>0?'<div class="mini-card"><div class="lbl">Camila - variavel</div><div class="val" style="color:var(--warn)">'+fmt(varC)+'/'+fmt(metaVC)+'</div></div>':'')+
+      '</div>';
+  }
+}
+
+function delFonteBtn(btn){
+  var pessoa = btn.dataset.pessoa;
+  var id = parseInt(btn.dataset.id);
+  delFonte(pessoa, id);
 }
 
 // GASTOS RECORRENTES
@@ -2742,8 +2859,8 @@ async function init(){
   await carregarPorques();
   await carregarTodasCatsCustom();
   await aplicarRecorrentesNoMes();
-  await renderAll();
   await renderFontes();
+  await renderAll();
   await renderRecorrentes();
   await renderContas();
   await renderMural();
@@ -2751,6 +2868,40 @@ async function init(){
   renderNotifBanner();
   registrarServiceWorker();
   await verificarContasAoAbrir();
+  verificarResumoMural();
+}
+
+// Auto mural summary at month start
+async function verificarResumoMural(){
+  var chaveVisto = 'nd2_mural_resumo_'+ano+'_'+mes;
+  if(localStorage.getItem(chaveVisto)) return;
+  // Only generate if we have data from last month
+  var mesPrev = mes===0?11:mes-1;
+  var anoPrev = mes===0?ano-1:ano;
+  var prevKey = 'nd2_'+anoPrev+'_'+mesPrev+'_domestico';
+  var prevData = localStorage.getItem(prevKey);
+  if(!prevData) return;
+  // Generate summary message
+  var meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var msg = 'Resumo automatico de '+meses[mesPrev]+'/'+anoPrev+': ';
+  try {
+    var dom = JSON.parse(prevData);
+    var totalDom = dom.reduce(function(a,g){return a+g.valor;},0);
+    msg += 'Domestico total: '+fmt(totalDom)+'. Novo mes comecou - bora manter o foco! 💪';
+  } catch(e) { return; }
+  // Add to mural
+  var notas = [];
+  try { notas = JSON.parse(localStorage.getItem(MURAL_KEY)||'[]'); } catch(e){}
+  notas.unshift({
+    id: Date.now(),
+    msg: msg,
+    quem: 'sistema',
+    hora: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    lida: false,
+    _auto: true
+  });
+  await store.set(MURAL_KEY, JSON.stringify(notas));
+  localStorage.setItem(chaveVisto, '1');
 }
 </script>
 
