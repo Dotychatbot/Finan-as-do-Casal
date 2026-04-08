@@ -1562,50 +1562,60 @@ function renderContribSummary(cache) {
 // ══ RESUMO FINANCEIRO PESSOAL ══
 function renderResumoFinanceiro(pessoa, cache) {
   var renda = pessoa==='fabio' ? _rF : _rC;
-  var diario = (cache['fabio_diario']||[]).concat();
-  var pessoal = (cache['fabio_pessoal']||[]).concat();
-  if(pessoa==='camila'){
-    diario = cache['camila_diario']||[];
-    pessoal = cache['camila_pessoal']||[];
-  }
-  var tDiario = diario.reduce(function(a,g){return a+g.valor;},0);
-  var tPessoal = pessoal.reduce(function(a,g){return a+g.valor;},0);
+  var contrib = pessoa==='fabio' ? _cF : _cC;
 
-  // Domestic part
+  var diario = (cache[pessoa+'_diario']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var pessoal = (cache[pessoa+'_pessoal']||[]).reduce(function(a,g){return a+g.valor;},0);
+
+  // Domestic part this person owes
   var dom = cache['domestico']||[];
   var domProp = dom.filter(function(g){return g.quem===pessoa;}).reduce(function(a,g){return a+g.valor;},0);
   var domConj = dom.filter(function(g){return g.quem==='conjunto'||g.quem==='casal';}).reduce(function(a,g){return a+g.valor;},0);
   var parteDom = domProp + domConj/2;
 
-  var totalGasto = tDiario + tPessoal + parteDom;
-  var saldo = renda - totalGasto;
+  // Use contrib from modal if set, else use parteDom
+  var contribUsada = contrib > 0 ? contrib : parteDom;
+
+  // Saldo = renda - diario - pessoal - contrib domestica
+  var saldo = renda - diario - pessoal - contribUsada;
+
   var cor = pessoa==='fabio'?'var(--fabio)':'var(--camila)';
   var saldoCor = saldo>=0?'var(--casal)':'var(--emerg)';
+  var saldoIcon = saldo>=0?'✅':'⚠️';
 
   // Meta economia
   var metaKey = 'nd2_meta_economia_'+pessoa;
   var meta = parseFloat(localStorage.getItem(metaKey)||'0')||0;
   var metaHtml = '';
   if(meta>0){
-    var pct = Math.min(saldo/meta*100,100).toFixed(0);
-    metaHtml = '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:4px"><span>Meta de economia</span><span>'+fmt(meta)+'</span></div><div style="height:6px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:'+cor+';width:'+Math.max(0,pct)+'%"></div></div></div>';
+    var pct = Math.min(saldo/meta*100,100);
+    var pctStr = pct.toFixed(0);
+    metaHtml = '<div style="margin-top:8px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:3px">'+
+      '<span>Meta de economia</span><span>'+fmt(meta)+'</span></div>'+
+      '<div style="height:5px;background:var(--bg2);border-radius:99px;overflow:hidden">'+
+      '<div style="height:100%;border-radius:99px;background:'+cor+';width:'+Math.max(0,pct)+'%"></div></div>'+
+      '</div>';
   }
 
-  var html = '<div style="background:linear-gradient(135deg,'+cor+'15,'+cor+'08);border:1px solid '+cor+'40;border-radius:14px;padding:16px 18px;margin-bottom:12px">'+
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px">'+
+  var html = '<div style="background:'+cor+'10;border:1px solid '+cor+'30;border-radius:12px;padding:14px;margin-bottom:12px">'+
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">'+
     '<div class="mini-card"><div class="lbl">Renda</div><div class="val" style="color:var(--casal)">'+fmt(renda)+'</div></div>'+
-    '<div class="mini-card"><div class="lbl">Diário+Pessoal</div><div class="val" style="color:'+cor+'">'+fmt(tDiario+tPessoal)+'</div></div>'+
-    '<div class="mini-card"><div class="lbl">Parte Doméstico</div><div class="val" style="color:var(--warn)">'+fmt(parteDom)+'</div></div>'+
-    '<div class="mini-card"><div class="lbl">Saldo Pessoal</div><div class="val" style="color:'+saldoCor+'">'+fmt(saldo)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Diario+Pessoal</div><div class="val" style="color:'+cor+'">'+fmt(diario+pessoal)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Parte Domestico</div><div class="val" style="color:var(--warn)">'+fmt(contribUsada)+'</div></div>'+
+    '<div class="mini-card"><div class="lbl">Saldo Pessoal</div><div class="val" style="color:'+saldoCor+'">'+saldoIcon+' '+fmt(saldo)+'</div></div>'+
     '</div>'+
-    '<div style="display:flex;gap:8px;align-items:flex-end">'+
-    '<div style="flex:1"><label style="font-size:.68rem;color:var(--muted)">Meta de economia/mes (R$)</label><input type="number" id="meta-econ-'+pessoa+'" placeholder="Ex: 300" value="'+meta+'" style="margin-top:4px"/></div>'+
-    '<button class="btn-sm" onclick="salvarMetaEcon(this.dataset.p)" data-p="'+pessoa+'">Salvar</button>'+
+    (saldo<0?'<div style="background:var(--emerg)15;border:1px solid var(--emerg)30;border-radius:8px;padding:8px;font-size:.76rem;color:var(--emerg)">⚠️ Voce esta R$ '+fmt(Math.abs(saldo))+' acima da sua renda este mes!</div>':'<div style="background:var(--casal)15;border:1px solid var(--casal)20;border-radius:8px;padding:8px;font-size:.76rem;color:var(--casal)">✅ Saldo positivo! Considere investir R$ '+fmt(saldo*0.1)+' (10%)</div>')+
+    '<div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px">'+
+    '<div style="flex:1"><label style="font-size:.68rem;color:var(--muted)">Meta de economia/mes (R$)</label>'+
+    '<input type="number" id="meta-econ-'+pessoa+'" placeholder="Ex: 300" value="'+meta+'" style="margin-top:4px"/></div>'+
+    '<button class="btn-sm" onclick="salvarMetaEcon(this)" data-p="'+pessoa+'">Salvar</button>'+
     '</div>'+metaHtml+'</div>';
 
   var el = document.getElementById('resumo-financeiro-'+pessoa);
   if(el) el.innerHTML = html;
 }
+
 
 function salvarMetaEcon(btn){
   var pessoa = btn.dataset ? btn.dataset.p : btn;
@@ -1701,39 +1711,62 @@ async function togglePago(btn){
 }
 
 function renderReceitas(){
-  // Get recorrentes to calculate deductions
+  // Get recorrentes
   var recs = [];
-  try { recs = JSON.parse(localStorage.getItem('nd2_g_recorrentes')||'[]'); } catch(e){}
+  try { recs = JSON.parse(localStorage.getItem(chaveG('recorrentes'))||'[]'); } catch(e){}
   var recAtivos = recs.filter(function(r){ return recorrenteAtivo(r); });
-  
   var recFabio = recAtivos.filter(function(r){return r.secao==='fabio_pessoal';}).reduce(function(a,r){return a+r.val;},0);
   var recCamila = recAtivos.filter(function(r){return r.secao==='camila_pessoal';}).reduce(function(a,r){return a+r.val;},0);
   var recDom = recAtivos.filter(function(r){return r.secao==='domestico';}).reduce(function(a,r){return a+r.val;},0);
-  
-  var dispF = _rF - _cF - recFabio - recDom/2;
-  var dispC = _rC - _cC - recCamila - recDom/2;
 
-  document.getElementById('rendaFabioEl').textContent=fmt(_rF);
-  document.getElementById('rendaCamilaEl').textContent=fmt(_rC);
-  
-  // Show detailed breakdown
+  // Use fontes de renda if available, else use _rF/_rC from modal
+  // _rF and _rC are already set by renderFontes or carregarRendas
+
+  // Contribution = _cF/_cC (from modal) OR half of domestic total
+  var dom = [];
+  try { dom = JSON.parse(localStorage.getItem(chave('domestico'))||'[]'); } catch(e){}
+  var totalDom = dom.reduce(function(a,g){return a+g.valor;},0);
+  // Use _cF if set, else calculate proportionally
+  var contribF = _cF > 0 ? _cF : totalDom/2;
+  var contribC = _cC > 0 ? _cC : totalDom/2;
+
+  // Final available = renda - contrib - recorrentes pessoais - metade recorrentes dom
+  var dispF = _rF - contribF - recFabio - recDom/2;
+  var dispC = _rC - contribC - recCamila - recDom/2;
+
+  document.getElementById('rendaFabioEl').textContent = fmt(_rF);
+  document.getElementById('rendaCamilaEl').textContent = fmt(_rC);
+
+  function breakdown(renda, contrib, recPess, recDomHalf, disp) {
+    var itens = '';
+    itens += '<div style="font-size:.78rem;margin-top:6px">';
+    itens += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>Renda</span><span style="color:var(--casal);font-weight:700">'+fmt(renda)+'</span></div>';
+    if(contrib>0) itens += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Contrib. domestica</span><span style="color:var(--emerg)">-'+fmt(contrib)+'</span></div>';
+    if(recPess>0) itens += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Recorrentes pessoais</span><span style="color:var(--emerg)">-'+fmt(recPess)+'</span></div>';
+    if(recDomHalf>0) itens += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Recorrentes casal (metade)</span><span style="color:var(--emerg)">-'+fmt(recDomHalf)+'</span></div>';
+    itens += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-weight:700"><span>= Disponivel</span><span style="color:'+(disp>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(disp)+'</span></div>';
+    if(disp<0) itens += '<div style="background:var(--emerg)15;border-radius:6px;padding:4px 8px;font-size:.72rem;color:var(--emerg);margin-top:2px">⚠️ Comprometido acima da renda!</div>';
+    if(disp>0) itens += '<div style="background:var(--casal)15;border-radius:6px;padding:4px 8px;font-size:.72rem;color:var(--casal);margin-top:2px">💡 Sugestao: invista '+fmt(disp*0.1)+' (10%)</div>';
+    itens += '</div>';
+    return itens;
+  }
+
   var cfEl = document.getElementById('contribFabioEl');
-  if(cfEl) cfEl.innerHTML = 
-    'Contribuicao domestica: <strong>'+fmt(_cF)+'</strong><br>'+
-    (recFabio>0?'Recorrentes pessoais: <strong style="color:var(--warn)">-'+fmt(recFabio)+'</strong><br>':'')+
-    (recDom>0?'Metade recorrentes casal: <strong style="color:var(--warn)">-'+fmt(recDom/2)+'</strong><br>':'')+
-    '<span style="color:'+(dispF>=0?'var(--casal)':'var(--emerg)')+'">Disponivel: <strong>'+fmt(dispF)+'</strong></span>';
+  if(cfEl) cfEl.innerHTML = breakdown(_rF, contribF, recFabio, recDom/2, dispF);
 
   var ccEl = document.getElementById('contribCamilaEl');
-  if(ccEl) ccEl.innerHTML = 
-    'Contribuicao domestica: <strong>'+fmt(_cC)+'</strong><br>'+
-    (recCamila>0?'Recorrentes pessoais: <strong style="color:var(--warn)">-'+fmt(recCamila)+'</strong><br>':'')+
-    (recDom>0?'Metade recorrentes casal: <strong style="color:var(--warn)">-'+fmt(recDom/2)+'</strong><br>':'')+
-    '<span style="color:'+(dispC>=0?'var(--casal)':'var(--emerg)')+'">Disponivel: <strong>'+fmt(dispC)+'</strong></span>';
+  if(ccEl) ccEl.innerHTML = breakdown(_rC, contribC, recCamila, recDom/2, dispC);
 
-  var total=_rF+_rC;
-  document.getElementById('rendaTotalEl').textContent=fmt(total);
-  document.getElementById('contribInfoEl').textContent=total>0?'Fundo domestico: '+fmt(_cF+_cC):'Adicione as rendas';
+  var total = _rF + _rC;
+  document.getElementById('rendaTotalEl').textContent = fmt(total);
+
+  // Resumo do casal
+  var totalDisp = dispF + dispC;
+  var infoEl = document.getElementById('contribInfoEl');
+  if(infoEl) infoEl.innerHTML = total>0 ?
+    'Fundo domestico: '+fmt(contribF+contribC)+
+    ' | Disponivel casal: <strong style="color:'+(totalDisp>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(totalDisp)+'</strong>' :
+    'Adicione as rendas para calcular';
 }
 
 // PORQUÊ
@@ -2624,13 +2657,19 @@ async function addFonte(pessoa){
   var tipo = document.getElementById(p+'-tipo').value;
   if(!desc||!val){alert('Preencha descricao e valor!');return;}
   var fontes = await carregarFontes(pessoa);
-  fontes.push({id:Date.now(),desc:desc,val:val,tipo:tipo,mes:mes,ano:ano});
+  // Fixed fontes have no mes/ano - they appear every month automatically
+  // Variable fontes are tagged with current month
+  var novaFonte = {id:Date.now(), desc:desc, val:val, tipo:tipo};
+  if(tipo==='variavel'){ novaFonte.mes=mes; novaFonte.ano=ano; }
+  fontes.push(novaFonte);
   await salvarFontes(pessoa, fontes);
   document.getElementById(p+'-desc').value='';
   document.getElementById(p+'-val').value='';
   await renderFontes();
   await renderAll();
 }
+
+
 async function delFonte(pessoa,id){
   var f = (await carregarFontes(pessoa)).filter(function(x){return x.id!==id;});
   await salvarFontes(pessoa, f);
@@ -2650,9 +2689,14 @@ async function renderFontes(){
   var ff = await carregarFontes('fabio');
   var fc = await carregarFontes('camila');
 
-  // Filter for current month or permanent (no mes/ano)
-  var ffMes = ff.filter(function(f){return !f.mes||(f.mes===mes&&f.ano===ano);});
-  var fcMes = fc.filter(function(f){return !f.mes||(f.mes===mes&&f.ano===ano);});
+  // Fixed fontes (no mes/ano) appear every month
+  // Variable fontes only appear in their month
+  var ffMes = ff.filter(function(f){
+    return f.tipo==='fixa' || (!f.mes) || (f.mes===mes && f.ano===ano);
+  });
+  var fcMes = fc.filter(function(f){
+    return f.tipo==='fixa' || (!f.mes) || (f.mes===mes && f.ano===ano);
+  });
 
   var fixaF = ffMes.filter(function(f){return f.tipo==='fixa';}).reduce(function(a,f){return a+f.val;},0);
   var varF = ffMes.filter(function(f){return f.tipo==='variavel';}).reduce(function(a,f){return a+f.val;},0);
@@ -2662,22 +2706,27 @@ async function renderFontes(){
   var varC = fcMes.filter(function(f){return f.tipo==='variavel';}).reduce(function(a,f){return a+f.val;},0);
   var totalC = fixaC + varC;
 
-  // Update global renda values for other calculations
-  _rF = totalF;
-  _rC = totalC;
+  // Update global renda - use fontes if available, else keep modal value
+  if(totalF > 0) _rF = totalF;
+  if(totalC > 0) _rC = totalC;
 
-  // Get recorrentes deductions
+  // Get recorrentes
   var recs = [];
   try { recs = JSON.parse(localStorage.getItem(chaveG('recorrentes'))||'[]'); } catch(e){}
-  var recAtivos = recs.filter(function(r){return recorrenteAtivo(r);});
+  var recAtivos = recs.filter(function(r){ return recorrenteAtivo(r); });
   var recFabio = recAtivos.filter(function(r){return r.secao==='fabio_pessoal';}).reduce(function(a,r){return a+r.val;},0);
   var recCamila = recAtivos.filter(function(r){return r.secao==='camila_pessoal';}).reduce(function(a,r){return a+r.val;},0);
   var recDom = recAtivos.filter(function(r){return r.secao==='domestico';}).reduce(function(a,r){return a+r.val;},0);
 
-  var dispF = fixaF - _cF - recFabio - recDom/2;
-  var dispFTotal = totalF - _cF - recFabio - recDom/2;
-  var dispC = fixaC - _cC - recCamila - recDom/2;
-  var dispCTotal = totalC - _cC - recCamila - recDom/2;
+  // Get domestic contribution
+  var dom = [];
+  try { dom = JSON.parse(localStorage.getItem(chave('domestico'))||'[]'); } catch(e){}
+  var totalDomReal = dom.reduce(function(a,g){return a+g.valor;},0);
+  var contribF = _cF > 0 ? _cF : totalDomReal/2;
+  var contribC = _cC > 0 ? _cC : totalDomReal/2;
+
+  var dispF = _rF - contribF - recFabio - recDom/2;
+  var dispC = _rC - contribC - recCamila - recDom/2;
 
   // Meta variavel
   var metaVF = parseFloat(await store.get(chaveM('meta_var_fabio'))||'0')||0;
@@ -2687,46 +2736,49 @@ async function renderFontes(){
 
   function fontesList(fontes, pessoa) {
     var cor = pessoa==='fabio'?'var(--fabio)':'var(--camila)';
-    if(!fontes.length) return '<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Nenhuma fonte cadastrada</div>';
+    if(!fontes.length) return '<div style="font-size:.76rem;color:var(--muted);padding:8px 0">Nenhuma fonte cadastrada</div>';
     return fontes.map(function(f){
       return '<div class="item" style="margin-bottom:5px">'+
         '<div class="item-ic">'+(f.tipo==='fixa'?'🔒':'📈')+'</div>'+
-        '<div class="item-info"><div class="item-nome">'+f.desc+'</div>'+
-        '<div class="item-meta">'+(f.tipo==='fixa'?'Fixa garantida':'Variavel/extra')+'</div></div>'+
+        '<div class="item-info">'+
+        '<div class="item-nome">'+f.desc+'</div>'+
+        '<div class="item-meta">'+(f.tipo==='fixa'?'Fixa - todo mes':'Variavel - '+MESES[mes]+'/'+ano)+'</div>'+
+        '</div>'+
         '<div class="item-val" style="color:'+cor+'">'+fmt(f.val)+'</div>'+
         '<button class="item-del" data-pessoa="'+pessoa+'" data-id="'+f.id+'" onclick="delFonteBtn(this)">&#x2715;</button>'+
         '</div>';
     }).join('');
   }
 
-  function detalheCard(pessoa, fixa, variavel, total, contrib, recPess, recDomHalf, dispFixa, dispTotal, metaVar, cor) {
+  function detalheCard(fixa, variavel, total, contrib, recPess, recDomHalf, disp, metaVar, cor) {
     var pct = total>0?Math.min((contrib+recPess+recDomHalf)/total*100,100).toFixed(0):0;
     var barCor = pct>90?'var(--emerg)':pct>70?'var(--warn)':'var(--casal)';
     var metaHtml = '';
     if(metaVar>0){
-      var mpct = Math.min(variavel/metaVar*100,100).toFixed(0);
-      metaHtml = '<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-bottom:3px"><span>Meta variavel: '+fmt(metaVar)+'</span><span>'+mpct+'%</span></div>'+
-        '<div style="height:5px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:var(--warn);width:'+mpct+'%"></div></div></div>';
+      var mpct = variavel>0?Math.min(variavel/metaVar*100,100).toFixed(0):0;
+      metaHtml = '<div style="margin-top:8px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-bottom:3px">'+
+        '<span>Meta variavel: '+fmt(metaVar)+'</span><span>'+mpct+'%</span></div>'+
+        '<div style="height:5px;background:var(--bg2);border-radius:99px;overflow:hidden">'+
+        '<div style="height:100%;border-radius:99px;background:var(--warn);width:'+mpct+'%"></div></div></div>';
     }
     return '<div style="background:'+cor+'10;border:1px solid '+cor+'30;border-radius:12px;padding:14px">'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
-      '<div class="mini-card"><div class="lbl">Fixa garantida</div><div class="val" style="color:var(--casal)">'+fmt(fixa)+'</div></div>'+
-      '<div class="mini-card"><div class="lbl">Variavel/bicos</div><div class="val" style="color:var(--warn)">'+fmt(variavel)+'</div></div>'+
-      '<div class="mini-card"><div class="lbl">(-) Domestico</div><div class="val" style="color:var(--emerg)">-'+fmt(contrib+recDomHalf)+'</div></div>'+
-      '<div class="mini-card"><div class="lbl">(-) Recorrentes</div><div class="val" style="color:var(--emerg)">-'+fmt(recPess)+'</div></div>'+
+      '<div style="font-size:.78rem;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>Renda fixa</span><span style="color:var(--casal);font-weight:700">'+fmt(fixa)+'</span></div>'+
+      (variavel>0?'<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>+ Variavel/bicos</span><span style="color:var(--warn)">+'+fmt(variavel)+'</span></div>':'')+
+      (contrib>0?'<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Contrib. domestica</span><span style="color:var(--emerg)">-'+fmt(contrib)+'</span></div>':'')+
+      (recPess>0?'<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Recorrentes pessoais</span><span style="color:var(--emerg)">-'+fmt(recPess)+'</span></div>':'')+
+      (recDomHalf>0?'<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>(-) Recorr. casal /2</span><span style="color:var(--emerg)">-'+fmt(recDomHalf)+'</span></div>':'')+
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-weight:700">'+
+      '<span>= Disponivel</span>'+
+      '<span style="color:'+(disp>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(disp)+'</span>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
-      '<span style="font-size:.8rem;font-weight:700">Disponivel (so fixo)</span>'+
-      '<span style="font-family:DM Mono,monospace;font-size:1rem;color:'+(dispFixa>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(dispFixa)+'</span>'+
       '</div>'+
-      (dispFixa!==dispTotal?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-      '<span style="font-size:.78rem;color:var(--muted)">Disponivel (com variavel)</span>'+
-      '<span style="font-family:DM Mono,monospace;font-size:.9rem;color:'+(dispTotal>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(dispTotal)+'</span>'+
-      '</div>':'')+
-      (dispFixa<0?'<div style="background:var(--emerg)15;border:1px solid var(--emerg)30;border-radius:8px;padding:8px;font-size:.76rem;color:var(--emerg);margin-bottom:8px">⚠️ Atencao: compromissos fixos maiores que a renda fixa!</div>':'')+
-      (dispTotal>0?'<div style="background:var(--casal)10;border:1px solid var(--casal)20;border-radius:8px;padding:8px;font-size:.76rem;color:var(--casal);margin-bottom:8px">💡 Sugestao: invista '+fmt(dispTotal*0.1)+' (10%) este mes!</div>':'')+
-      '<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-bottom:3px"><span>'+pct+'% comprometido da renda total</span></div>'+
-      '<div style="height:6px;background:var(--bg2);border-radius:99px;overflow:hidden"><div style="height:100%;border-radius:99px;background:'+barCor+';width:'+pct+'%"></div></div></div>'+
+      (disp<0?'<div style="background:var(--emerg)15;border-radius:6px;padding:6px 8px;font-size:.74rem;color:var(--emerg)">⚠️ R$ '+fmt(Math.abs(disp))+' acima da sua renda!</div>':
+              '<div style="background:var(--casal)15;border-radius:6px;padding:6px 8px;font-size:.74rem;color:var(--casal)">✅ Sugestao: invista R$ '+fmt(disp*0.1)+' (10%)</div>')+
+      '<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:3px"><span>'+pct+'% comprometido</span></div>'+
+      '<div style="height:6px;background:var(--bg2);border-radius:99px;overflow:hidden">'+
+      '<div style="height:100%;border-radius:99px;background:'+barCor+';width:'+pct+'%"></div></div></div>'+
       metaHtml+'</div>';
   }
 
@@ -2738,18 +2790,27 @@ async function renderFontes(){
 
   // Render detail cards
   var df = document.getElementById('receita-detalhe-fabio');
-  if(df) df.innerHTML = detalheCard('fabio', fixaF, varF, totalF, _cF, recFabio, recDom/2, dispF, dispFTotal, metaVF, '#2d5be3');
+  if(df) df.innerHTML = detalheCard(fixaF, varF, totalF, contribF, recFabio, recDom/2, dispF, metaVF, '#2d5be3');
   var dc = document.getElementById('receita-detalhe-camila');
-  if(dc) dc.innerHTML = detalheCard('camila', fixaC, varC, totalC, _cC, recCamila, recDom/2, dispC, dispCTotal, metaVC, '#d4538a');
+  if(dc) dc.innerHTML = detalheCard(fixaC, varC, totalC, contribC, recCamila, recDom/2, dispC, metaVC, '#d4538a');
 
   // Total casal
   var tc = document.getElementById('receita-total-casal');
-  if(tc) tc.innerHTML = '<div style="background:var(--casal)10;border:1px solid var(--casal)30;border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">'+
-    '<div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda total do casal</div>'+
-    '<div style="font-family:DM Mono,monospace;font-size:1.4rem;color:var(--casal)">'+fmt(totalF+totalC)+'</div>'+
-    '<div style="font-size:.74rem;color:var(--muted);margin-top:2px">Fixa: '+fmt(fixaF+fixaC)+' | Variavel: '+fmt(varF+varC)+'</div></div>'+
-    '<div style="text-align:right"><div style="font-size:.7rem;color:var(--muted)">Fundo domestico</div>'+
-    '<div style="font-family:DM Mono,monospace;font-size:.95rem">'+fmt(_cF+_cC)+'</div></div></div>';
+  if(tc){
+    var totalDisp = dispF + dispC;
+    tc.innerHTML = '<div style="background:var(--casal)10;border:1px solid var(--casal)30;border-radius:14px;padding:16px 18px">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+      '<div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">Renda total do casal</div>'+
+      '<div style="font-family:DM Mono,monospace;font-size:1.3rem;color:var(--casal)">'+fmt(totalF+totalC)+'</div>'+
+      '<div style="font-size:.74rem;color:var(--muted)">Fixa: '+fmt(fixaF+fixaC)+' | Variavel: '+fmt(varF+varC)+'</div></div>'+
+      '<div style="text-align:right">'+
+      '<div style="font-size:.7rem;color:var(--muted)">Disponivel casal</div>'+
+      '<div style="font-family:DM Mono,monospace;font-size:1.1rem;color:'+(totalDisp>=0?'var(--casal)':'var(--emerg)')+'">'+fmt(totalDisp)+'</div>'+
+      '</div></div>'+
+      (totalDisp<0?'<div style="background:var(--emerg)15;border-radius:8px;padding:8px;font-size:.76rem;color:var(--emerg)">⚠️ Os compromissos do casal estao acima da renda total!</div>':
+                   '<div style="background:var(--casal)15;border-radius:8px;padding:8px;font-size:.76rem;color:var(--casal)">✅ Disponivel para o casal: '+fmt(totalDisp)+' — invista pelo menos '+fmt(totalDisp*0.1)+'!</div>')+
+      '</div>';
+  }
 
   // Meta variavel resumo
   var mvr = document.getElementById('meta-var-resumo');
@@ -2760,6 +2821,7 @@ async function renderFontes(){
       '</div>';
   }
 }
+
 
 function delFonteBtn(btn){
   var pessoa = btn.dataset.pessoa;
