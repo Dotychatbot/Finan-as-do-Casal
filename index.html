@@ -9,6 +9,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Nós Dois"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  try{
+    var cfg={
+      apiKey:"AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
+      authDomain:"nosdois-financas.firebaseapp.com",
+      projectId:"nosdois-financas",
+      storageBucket:"nosdois-financas.firebasestorage.app",
+      messagingSenderId:"141934571983",
+      appId:"1:141934571983:web:8288980a9eba25df6f22ba"
+    };
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    window._fbDB = firebase.firestore();
+    console.log('Firebase inicializado no HEAD');
+  }catch(e){
+    console.warn('Firebase HEAD err:',e.message);
+    window._fbDB = null;
+  }
+})();
+</script>
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTsOzcyBEb2lzIOKAlCBGaW5hbsOnYXMiLCJzaG9ydF9uYW1lIjoiTsOzcyBEb2lzIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmYWY4ZjQiLCJ0aGVtZV9jb2xvciI6IiMyYTdkNGYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIHJ4PScyMCcgZmlsbD0nJTIzMmE3ZDRmJy8lM0UlM0N0ZXh0IHk9Jy43ZW0nIGZvbnQtc2l6ZT0nNjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIHg9JzUwJyUzRSVGMCU5RiVBNCU4RCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiYW55IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -436,6 +458,7 @@ function logar(){
     <span id="labelMes"></span>
       <button onclick="mudarMes(1)">›</button>
     </div>
+    <button id="btnSync" class="btn-logout" onclick="sincronizarAgora()" style="margin-right:4px">🔄 Sincronizar</button>
     <button class="btn-logout" onclick="confirmarSair()">🚪 Sair</button>
   </div>
 </nav>
@@ -1165,144 +1188,147 @@ function logar(){
 // Enter key para login
 document.addEventListener('DOMContentLoaded',function(){var inp=document.getElementById('inputSenha');if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')logar();});});
 
-// STORAGE — localStorage + Firebase compat (versao que funcionava)
-var _fbReady = false;
-var _fbDB = null;
-var _fbQueue = {};
-var _fbFlushing = false;
-
-function flushFB() {
-  if (!_fbReady || !_fbDB || _fbFlushing) return;
-  var keys = Object.keys(_fbQueue);
-  if (!keys.length) return;
-  _fbFlushing = true;
-  var payload = {};
-  keys.forEach(function(k){ payload[k] = _fbQueue[k]; });
-  _fbDB.collection('casal').doc('v1').set(payload, {merge:true})
-    .then(function(){
-      keys.forEach(function(k){ delete _fbQueue[k]; });
-      _fbFlushing = false;
-    })
-    .catch(function(e){
-      _fbFlushing = false;
-      setTimeout(flushFB, 3000);
-    });
-}
+// STORAGE — Firebase direto sem fila complexa
+var _syncEnabled = true;
 
 const store = {
-  async get(k) { return localStorage.getItem(k); },
+  async get(k) {
+    return localStorage.getItem(k);
+  },
   async set(k, v) {
     localStorage.setItem(k, v);
-    _fbQueue[k] = v;
-    flushFB();
+    if(_syncEnabled && window._fbDB){
+      var obj = {};
+      obj[k] = v;
+      window._fbDB.collection('casal').doc('v1').set(obj,{merge:true})
+        .catch(function(e){console.warn('FB set err:',e.message);});
+    }
   }
 };
 
 function fbSave(k, v) {
-  localStorage.setItem(k, v);
-  _fbQueue[k] = v;
-  flushFB();
+  store.set(k, v);
 }
 
-function startFirebase() {
-  try {
-    var cfg = {
-      apiKey:"AIzaSyCuTmo437ItxMou9RiEMCgylRxXze0QjIA",
-      authDomain:"nosdois-financas.firebaseapp.com",
-      projectId:"nosdois-financas",
-      storageBucket:"nosdois-financas.firebasestorage.app",
-      messagingSenderId:"141934571983",
-      appId:"1:141934571983:web:8288980a9eba25df6f22ba"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    _fbDB = firebase.firestore();
-    _fbReady = true;
-    console.log('Firebase OK');
-    // Load cloud data
-    _fbDB.collection('casal').doc('v1').get()
-      .then(function(snap) {
-        if (!snap.exists) { flushFB(); return; }
-        var cloud = snap.data();
-        Object.keys(cloud).forEach(function(k) {
-          var local = localStorage.getItem(k);
-          var cv = cloud[k];
-          if (!local) {
-            localStorage.setItem(k, cv);
-          } else {
-            try {
-              var la = JSON.parse(local);
-              var ca = JSON.parse(cv);
-              if (Array.isArray(la) && Array.isArray(ca)) {
-                var merged = ca.slice();
-                la.forEach(function(item) {
-                  if (!merged.find(function(c){return c.id===item.id;})) merged.push(item);
-                });
-                var ms = JSON.stringify(merged);
-                localStorage.setItem(k, ms);
-                _fbQueue[k] = ms;
-              }
-            } catch(e) {}
-          }
-        });
-        flushFB();
-        if (typeof renderAll === 'function') renderAll();
-      })
-      .catch(function(e){ console.log('FB load err:', e.message); });
-  } catch(e) { console.log('FB init err:', e.message); }
+// Sync FROM Firebase to localStorage
+function syncFromFirebase(callback){
+  if(!window._fbDB){ if(callback)callback(); return; }
+  window._fbDB.collection('casal').doc('v1').get()
+    .then(function(snap){
+      if(!snap.exists){ if(callback)callback(); return; }
+      var data = snap.data();
+      var changed = false;
+      Object.keys(data).forEach(function(k){
+        var cloud = data[k];
+        var local = localStorage.getItem(k);
+        if(!local){
+          localStorage.setItem(k, cloud);
+          changed = true;
+        } else {
+          try{
+            var la = JSON.parse(local);
+            var ca = JSON.parse(cloud);
+            if(Array.isArray(la)&&Array.isArray(ca)){
+              var merged = ca.slice();
+              la.forEach(function(item){
+                if(!merged.find(function(c){return c.id===item.id;}))
+                  merged.push(item);
+              });
+              var ms = JSON.stringify(merged);
+              if(ms!==local){ localStorage.setItem(k,ms); changed=true; }
+            }
+          }catch(e){}
+        }
+      });
+      if(changed&&typeof renderAll==='function') renderAll();
+      if(callback)callback();
+    })
+    .catch(function(e){
+      console.warn('syncFromFirebase err:',e.message);
+      if(callback)callback();
+    });
 }
 
-// Listen for realtime updates
-function startRealtimeSync() {
-  if (!_fbDB) return;
-  _fbDB.collection('casal').doc('v1').onSnapshot(function(snap) {
-    if (!snap.exists) return;
-    var cloud = snap.data();
-    var changed = false;
-    Object.keys(cloud).forEach(function(k) {
-      var local = localStorage.getItem(k);
-      if (local !== cloud[k]) {
-        try {
+// Push ALL local data to Firebase
+function pushAllToFirebase(){
+  if(!window._fbDB) return;
+  var payload = {};
+  for(var i=0;i<localStorage.length;i++){
+    var k = localStorage.key(i);
+    if(k&&(k.startsWith('nd2_')||k.startsWith('padoty_'))){
+      payload[k] = localStorage.getItem(k);
+    }
+  }
+  window._fbDB.collection('casal').doc('v1').set(payload,{merge:true})
+    .then(function(){ console.log('Push completo: '+Object.keys(payload).length+' chaves'); })
+    .catch(function(e){ console.warn('Push err:',e.message); });
+}
+
+// Realtime listener - atualiza automaticamente
+function iniciarRealtimeSync(){
+  if(!window._fbDB) return;
+  window._fbDB.collection('casal').doc('v1').onSnapshot(
+    function(snap){
+      if(!snap.exists) return;
+      var data = snap.data();
+      var changed = false;
+      Object.keys(data).forEach(function(k){
+        var cloud = data[k];
+        var local = localStorage.getItem(k);
+        if(local===cloud) return;
+        try{
           var la = JSON.parse(local||'[]');
-          var ca = JSON.parse(cloud[k]);
-          if (Array.isArray(la) && Array.isArray(ca)) {
+          var ca = JSON.parse(cloud);
+          if(Array.isArray(la)&&Array.isArray(ca)){
             var merged = ca.slice();
-            la.forEach(function(item) {
-              if (!merged.find(function(c){return c.id===item.id;})) merged.push(item);
+            la.forEach(function(item){
+              if(!merged.find(function(c){return c.id===item.id;}))
+                merged.push(item);
             });
             var ms = JSON.stringify(merged);
             localStorage.setItem(k, ms);
           } else {
-            localStorage.setItem(k, cloud[k]);
+            localStorage.setItem(k, cloud);
           }
           changed = true;
-        } catch(e) {
-          localStorage.setItem(k, cloud[k]);
+        }catch(e){
+          localStorage.setItem(k, cloud);
           changed = true;
         }
+      });
+      if(changed){
+        console.log('Realtime: dados atualizados');
+        if(typeof renderAll==='function') renderAll();
+        if(typeof renderFontes==='function') renderFontes();
       }
-    });
-    if (changed && typeof renderAll === 'function') {
-      console.log('Sync: dados atualizados da nuvem');
-      renderAll();
-    }
-  }, function(e){ console.log('Realtime err:', e.message); });
+    },
+    function(e){ console.warn('Realtime err:',e.message); }
+  );
 }
 
-window.addEventListener('load', function() {
-  var s1 = document.createElement('script');
-  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
-  s1.onload = function() {
-    var s2 = document.createElement('script');
-    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
-    s2.onload = function() {
-      startFirebase();
-      setTimeout(startRealtimeSync, 3000);
-    };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s1);
+// Init Firebase data loading
+window.addEventListener('load', function(){
+  syncFromFirebase(function(){
+    pushAllToFirebase();
+    iniciarRealtimeSync();
+  });
 });
 
+// Manual sync function
+function sincronizarAgora(){
+  var btn = document.getElementById('btnSync');
+  if(btn){ btn.textContent='🔄 Sincronizando...'; btn.disabled=true; }
+  syncFromFirebase(function(){
+    pushAllToFirebase();
+    setTimeout(function(){
+      if(typeof renderAll==='function') renderAll();
+      if(typeof renderFontes==='function') renderFontes();
+      if(btn){ btn.textContent='🔄 Sincronizar'; btn.disabled=false; }
+    }, 1500);
+  });
+}
+
+// Remove the old dynamic Firebase loader if exists
 
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 let mes=new Date().getMonth(),ano=new Date().getFullYear();
