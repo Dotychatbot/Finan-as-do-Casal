@@ -415,7 +415,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
     <div class="login-title">Nós Dois</div>
     <div class="login-sub">Finanças do casal — acesso exclusivo</div>
     <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30"/>
-    <button class="login-btn" id="login-btn-main">Entrar →</button>
+    <button class="login-btn" onclick="tentarLogin()">Entrar →</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -1143,20 +1143,27 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 const SENHA='Mus@s2026';
 
 function tentarLogin(){
-  const val = document.getElementById('inputSenha').value;
+  var inp = document.getElementById('inputSenha');
+  var err = document.getElementById('loginErr');
+  var val = inp ? inp.value : '';
   if(val === SENHA){
     document.getElementById('telaLogin').style.display='none';
     document.getElementById('telaApp').style.display='block';
     init();
   } else {
-    document.getElementById('loginErr').textContent='Senha incorreta.';
-    document.getElementById('inputSenha').value='';
+    if(err) err.textContent='Senha incorreta. Tente novamente.';
+    if(inp) inp.value='';
   }
 }
-document.getElementById('inputSenha').addEventListener('keydown',function(e){
-  if(e.key==='Enter') tentarLogin();
+
+window.addEventListener('load', function(){
+  var inp = document.getElementById('inputSenha');
+  if(inp){
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') tentarLogin();
+    });
+  }
 });
-document.getElementById('login-btn-main').addEventListener('click', tentarLogin);
 
 // STORAGE — Firebase Firestore + localStorage fallback
 const _DOC = 'nosdois_v1';
