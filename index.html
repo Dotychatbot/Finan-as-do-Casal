@@ -9,6 +9,34 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Nós Dois"/>
+<!-- LANÇAMENTO RÁPIDO FAB -->
+<div id="fabMenu" style="display:none;position:fixed;bottom:80px;right:16px;z-index:300;display:none;flex-direction:column;gap:8px;align-items:flex-end">
+  <div id="fabOpcoes" style="display:none;flex-direction:column;gap:6px;align-items:flex-end">
+    <button onclick="fabLancar('fabio_diario')" style="background:var(--fabio);color:white;border:none;border-radius:20px;padding:8px 16px;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)">👤 Fábio — Diário</button>
+    <button onclick="fabLancar('fabio_pessoal')" style="background:var(--fabio);color:white;border:none;border-radius:20px;padding:8px 16px;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;opacity:.85;box-shadow:0 4px 12px rgba(0,0,0,.2)">👤 Fábio — Pessoal</button>
+    <button onclick="fabLancar('camila_diario')" style="background:var(--camila);color:white;border:none;border-radius:20px;padding:8px 16px;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)">👩 Camila — Diário</button>
+    <button onclick="fabLancar('camila_pessoal')" style="background:var(--camila);color:white;border:none;border-radius:20px;padding:8px 16px;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;opacity:.85;box-shadow:0 4px 12px rgba(0,0,0,.2)">👩 Camila — Pessoal</button>
+    <button onclick="fabLancar('domestico')" style="background:var(--casal);color:white;border:none;border-radius:20px;padding:8px 16px;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)">🏠 Doméstico</button>
+  </div>
+  <button id="fabBtn" onclick="toggleFab()" style="width:56px;height:56px;border-radius:50%;background:var(--casal);color:white;border:none;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 20px rgba(42,125,79,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s">＋</button>
+</div>
+
+<!-- MODAL LANÇAMENTO RÁPIDO -->
+<div class="overlay" id="overlayFab" onclick="fecharOverlay('overlayFab',event)">
+  <div class="modal">
+    <h2 id="fabModalTit">⚡ Lançamento Rápido</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="full"><label>Descrição</label><input type="text" id="fab-desc" placeholder="Ex: Mercado, Gasolina..."/></div>
+      <div><label>Valor (R$)</label><input type="number" id="fab-val" placeholder="0,00" step="0.01" min="0"/></div>
+      <div><label>Data</label><input type="date" id="fab-data"/></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal('overlayFab')">Cancelar</button>
+      <button class="btn-confirm" onclick="fabSalvar()">⚡ Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Firebase carrega de forma segura
 window._fbDB = null;
@@ -429,6 +457,15 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .mini-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
 .mini-card .lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
 .mini-card .val{font-family:DM Mono,monospace;font-size:1rem;}
+
+/* MODO ESCURO */
+body.dark{
+  --bg:#0f1117;--bg2:#1a1d27;--surface:#1e2130;--border:#2d3148;
+  --text:#e8eaf0;--muted:#6b7280;
+}
+body.dark .login-box{background:rgba(255,255,255,.06);}
+body.dark input,body.dark select{background:#1a1d27;color:#e8eaf0;border-color:#2d3148;}
+body.dark .modal{background:#1e2130;color:#e8eaf0;}
 </style>
 </head>
 <body>
@@ -441,17 +478,39 @@ function verSenha(){
   i.type=vendo?'text':'password';
   b.textContent=vendo?'Ocultar':'Mostrar';
 }
+var _pessoaLogin = 'casal';
+
+function selecionarPessoa(pessoa, btn){
+  _pessoaLogin = pessoa;
+  ['fabio','camila','casal'].forEach(function(p){
+    var b = document.getElementById('btn-pessoa-'+p);
+    if(b) b.style.opacity = p===pessoa ? '1' : '0.5';
+  });
+}
+
 function logar(){
-  var v=document.getElementById('inputSenha').value;
-  var e=document.getElementById('loginErr');
-  if(v==='Mus@s2026'){
+  var v = document.getElementById('inputSenha').value;
+  var e = document.getElementById('loginErr');
+  
+  // Passwords: casal=Mus@s2026, fabio=Fabio@2026, camila=Camila@2026
+  var senhas = {
+    casal: 'Mus@s2026',
+    fabio: 'Fabio@2026',
+    camila: 'Camila@2026'
+  };
+  
+  // Also accept master password for all
+  var senhaCorreta = senhas[_pessoaLogin] || senhas.casal;
+  
+  if(v === senhaCorreta || v === senhas.casal){
+    window._usuarioLogado = _pessoaLogin;
     document.getElementById('telaLogin').style.display='none';
     document.getElementById('telaApp').style.display='block';
-    if(typeof init==='function')init();
-  }else if(v===''){
-    if(e)e.textContent='Digite a senha!';
-  }else{
-    if(e)e.textContent='Senha incorreta. Tente novamente.';
+    if(typeof init==='function') init();
+  } else if(v===''){
+    if(e) e.textContent='Digite a senha!';
+  } else {
+    if(e) e.textContent='Senha incorreta. Tente novamente.';
     document.getElementById('inputSenha').value='';
   }
 }
@@ -463,6 +522,11 @@ function logar(){
     <div class="login-hearts">💑</div>
     <div class="login-title">Nós Dois</div>
     <div class="login-sub">Finanças do casal — acesso exclusivo</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button onclick="selecionarPessoa('fabio',this)" id="btn-pessoa-fabio" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(45,91,227,.4);background:rgba(45,91,227,.1);color:#7ba7f7;font-family:DM Sans,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s">👤 Fábio</button>
+      <button onclick="selecionarPessoa('camila',this)" id="btn-pessoa-camila" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(212,83,138,.4);background:rgba(212,83,138,.1);color:#e89bbf;font-family:DM Sans,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s">👩 Camila</button>
+      <button onclick="selecionarPessoa('casal',this)" id="btn-pessoa-casal" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(42,125,79,.6);background:rgba(42,125,79,.2);color:#6abf8e;font-family:DM Sans,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s">💑 Casal</button>
+    </div>
     <div style="position:relative;margin-bottom:14px">
       <input class="login-input" type="password" id="inputSenha" placeholder="Digite a senha" maxlength="30" style="margin-bottom:0;padding-right:50px"/>
       <button onclick="verSenha()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.1rem;" id="btnOlho">👁️</button>
@@ -482,6 +546,7 @@ function logar(){
     <span id="labelMes"></span>
       <button onclick="mudarMes(1)">›</button>
     </div>
+    <button id="btnTema" class="btn-logout" onclick="toggleTema()" style="margin-right:4px" title="Modo escuro/claro">🌙</button>
     <button id="btnSync" class="btn-logout" onclick="sincronizarAgora()" style="margin-right:4px">🔄 Sincronizar</button>
     <button class="btn-logout" onclick="confirmarSair()">🚪 Sair</button>
   </div>
@@ -1398,6 +1463,88 @@ window.addEventListener('load', function(){
 });
 
 // Manual sync function
+// FAB - LANÇAMENTO RÁPIDO
+var _fabTipo = 'fabio_diario';
+var _fabAberto = false;
+
+function toggleFab(){
+  _fabAberto = !_fabAberto;
+  var opcoes = document.getElementById('fabOpcoes');
+  var btn = document.getElementById('fabBtn');
+  if(opcoes) opcoes.style.display = _fabAberto ? 'flex' : 'none';
+  if(btn) btn.style.transform = _fabAberto ? 'rotate(45deg)' : 'rotate(0)';
+}
+
+function fabLancar(tipo){
+  _fabTipo = tipo;
+  _fabAberto = false;
+  var opcoes = document.getElementById('fabOpcoes');
+  var btn = document.getElementById('fabBtn');
+  if(opcoes) opcoes.style.display = 'none';
+  if(btn) btn.style.transform = 'rotate(0)';
+  
+  var labels = {
+    fabio_diario:'Fabio — Diario', fabio_pessoal:'Fabio — Pessoal',
+    camila_diario:'Camila — Diario', camila_pessoal:'Camila — Pessoal',
+    domestico:'Domestico'
+  };
+  var tit = document.getElementById('fabModalTit');
+  if(tit) tit.textContent = '⚡ '+( labels[tipo]||tipo);
+  
+  var dataEl = document.getElementById('fab-data');
+  if(dataEl) dataEl.value = hoje();
+  
+  document.getElementById('overlayFab').classList.add('aberto');
+  setTimeout(function(){ var d=document.getElementById('fab-desc'); if(d)d.focus(); }, 200);
+}
+
+async function fabSalvar(){
+  var desc = document.getElementById('fab-desc').value.trim();
+  var val = parseFloat(document.getElementById('fab-val').value)||0;
+  var data = document.getElementById('fab-data').value;
+  if(!desc||!val){alert('Preencha descricao e valor!');return;}
+  
+  var dados = await carregar(_fabTipo);
+  dados.push({
+    id: Date.now(),
+    desc: desc,
+    valor: val,
+    cat: 'outros',
+    pag: 'debito',
+    data: data||hoje(),
+    quem: _fabTipo==='domestico'?'conjunto':(_fabTipo.startsWith('fabio')?'fabio':'camila'),
+    obs: '⚡ Rapido'
+  });
+  await salvar(_fabTipo, dados);
+  
+  document.getElementById('fab-desc').value='';
+  document.getElementById('fab-val').value='';
+  fecharModal('overlayFab');
+  await renderAll();
+}
+
+// Show FAB only when logged in
+function mostrarFAB(){
+  var fab = document.getElementById('fabMenu');
+  if(fab) fab.style.display = 'flex';
+}
+
+function toggleTema(){
+  var isDark = document.body.classList.toggle('dark');
+  var btn = document.getElementById('btnTema');
+  if(btn) btn.textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('nd2_tema', isDark ? 'dark' : 'light');
+}
+
+function carregarTema(){
+  var tema = localStorage.getItem('nd2_tema');
+  if(tema === 'dark'){
+    document.body.classList.add('dark');
+    var btn = document.getElementById('btnTema');
+    if(btn) btn.textContent = '☀️';
+  }
+}
+
 function sincronizarAgora(){
   var btn = document.getElementById('btnSync');
   if(btn){ btn.textContent='🔄 Sincronizando...'; btn.disabled=true; }
@@ -1647,7 +1794,7 @@ function renderContribSummary(cache) {
     '</div></div>';
 }
 
-// ══ RESUMO FINANCEIRO PESSOAL ══
+// RESUMO FINANCEIRO PESSOAL
 function renderResumoFinanceiro(pessoa, cache) {
   var renda = pessoa==='fabio' ? _rF : _rC;
   var contrib = pessoa==='fabio' ? _cF : _cC;
@@ -1713,7 +1860,7 @@ function salvarMetaEcon(btn){
   if(window._cache) renderResumoFinanceiro(pessoa, window._cache);
 }
 
-// ══ DOMÉSTICO POR PESSOA ══
+// DOMESTICO POR PESSOA
 async function renderPersonDom(pessoa){
   var cache = window._cache || {};
   var dom = cache['domestico'] || [];
@@ -2393,6 +2540,7 @@ async function renderAll(){
   renderContribSummary(window._cache);
   renderResumoFinanceiro('fabio', window._cache);
   renderResumoFinanceiro('camila', window._cache);
+  renderGrafico(window._cache);
   await renderResumo(window._cache);
   await renderReservas();
   await renderInvResumo();
@@ -2424,6 +2572,10 @@ async function addConta(){
   await renderContas();
 }
 
+function delContaBtn(btn){
+  delConta(btn.dataset.id);
+}
+
 async function delConta(id){
   if(!confirm('Remover esta conta?'))return;
   const raw=await store.get('nd2_contas')||'[]';
@@ -2443,67 +2595,70 @@ function diasParaVencer(dia){
 }
 
 async function renderContas(){
-  const raw=await store.get('nd2_contas')||'[]';
-  const contas=JSON.parse(raw);
-  const el=document.getElementById('listaContas');
-  const alertEl=document.getElementById('alertaVencimentoEl');
-  if(!el)return;
+  // Manual contas
+  var contas = JSON.parse(await store.get(chaveG('contas'))||'[]');
+  
+  // Add active recorrentes automatically
+  var recs = JSON.parse(await store.get(chaveG('recorrentes'))||'[]');
+  var recAtivos = recs.filter(function(r){ return recorrenteAtivo(r); });
+  recAtivos.forEach(function(r){
+    var jaExiste = contas.some(function(c){ return c._recId===r.id; });
+    if(!jaExiste){
+      var parc = parcelaAtual(r);
+      contas.push({
+        id:'rec_'+r.id,
+        nome: r.desc,
+        valor: r.val,
+        dia: r.dia||1,
+        cat: r.cat||'outros',
+        obs: r.meses>0?'Parcela '+parc+'/'+r.meses:'Recorrente fixo',
+        _recId: r.id,
+        _auto: true
+      });
+    }
+  });
 
-  if(!contas.length){
-    el.innerHTML='<div class="vazio">Nenhuma conta cadastrada ainda. Adicione suas contas acima! 📅</div>';
-    if(alertEl)alertEl.innerHTML='';
+  var comDias = contas.map(function(c){return Object.assign({},c,{dias:diasParaVencer(c.dia)});});
+  comDias.sort(function(a,b){return a.dias-b.dias;});
+
+  var el = document.getElementById('lista-contas');
+  var alertEl = document.getElementById('contas-alerta');
+  if(!el) return;
+
+  var urgentes = comDias.filter(function(c){return c.dias<=3;});
+  if(alertEl){
+    alertEl.innerHTML = urgentes.map(function(c){
+      return '<div class="alerta-banner"><div class="ab-icon">🔔</div>'+
+        '<div><h4>'+c.nome+' vence em '+c.dias+' dia(s)!</h4>'+
+        '<p>Valor: '+fmt(c.valor)+(c.obs?' — '+c.obs:'')+'</p></div></div>';
+    }).join('');
+  }
+
+  if(!comDias.length){
+    el.innerHTML='<div class="vazio">Nenhuma conta cadastrada</div>';
     return;
   }
 
-  // ordenar por dias para vencer
-  const comDias=contas.map(function(c){return Object.assign({},c,{dias:diasParaVencer(c.dia)});});
-  comDias.sort((a,b)=>a.dias-b.dias);
-
-  // alertas
-  const urgentes=comDias.filter(c=>c.dias<=3);
-  const vencendo=comDias.filter(c=>c.dias>3&&c.dias<=7);
-  if(alertEl){
-    let alertHtml='';
-    if(urgentes.length){
-      const nomes=urgentes.map(c=>`${CAT_CONTA_ICONS[c.cat]||'📦'} ${c.nome}`).join(', ');
-      alertHtml+=`<div class="alerta-banner"><div class="ab-icon">🚨</div><div><h4>${urgentes.length} conta(s) vencendo em até 3 dias!</h4><p>${nomes}</p></div></div>`;
-    }
-    if(vencendo.length){
-      const nomes=vencendo.map(c=>`${CAT_CONTA_ICONS[c.cat]||'📦'} ${c.nome}`).join(', ');
-      alertHtml+=`<div class="alerta-banner" style="background:linear-gradient(135deg,var(--warn),#b45309)"><div class="ab-icon">⚠️</div><div><h4>${vencendo.length} conta(s) vencendo esta semana</h4><p>${nomes}</p></div></div>`;
-    }
-    alertEl.innerHTML=alertHtml;
-  }
-
-  const QNAMES={casal:'Casal',fabio:'Fábio',camila:'Camila'};
-  el.innerHTML=comDias.map(c=>{
-    const icon=CAT_CONTA_ICONS[c.cat]||'📦';
-    let status,badgeCls,cardCls,icCls;
-    if(c.dias<=0){status='VENCIDA';badgeCls='badge-vencida';cardCls='vencida';icCls='vencida';}
-    else if(c.dias<=3){status=`Vence em ${c.dias} dia(s)`;badgeCls='badge-vencendo';cardCls='vencendo';icCls='vencendo';}
-    else if(c.dias<=7){status=`Vence em ${c.dias} dias`;badgeCls='badge-vencendo';cardCls='vencendo';icCls='vencendo';}
-    else{status=`Dia ${c.dia} — ${c.dias} dias`;badgeCls='badge-ok';cardCls='ok';icCls='ok';}
-    return`<div class="conta-card ${cardCls}">
-      <div class="conta-ic ${icCls}">${icon}</div>
-      <div class="conta-info">
-        <div class="conta-nome">${c.nome}</div>
-        <div class="conta-meta">${QNAMES[c.quem]||c.quem}${c.obs?' · '+c.obs:''}</div>
-      </div>
-      <div class="conta-right">
-        <div class="conta-valor">${fmt(c.valor)}</div>
-        <span class="conta-badge ${badgeCls}">${status}</span>
-      </div>
-      <button class="item-del" onclick="delConta(${c.id})" title="Remover">✕</button>
-    </div>`;
+  el.innerHTML = comDias.map(function(c){
+    var status = c.dias<=0?'vencida':c.dias<=5?'vencendo':'ok';
+    var badge = c.dias<=0?'Vencida!':c.dias<=5?'Vence em '+c.dias+'d':'Dia '+c.dia;
+    var autoTag = c._auto?'<span style="font-size:.6rem;background:#2a7d4f20;color:var(--casal);padding:1px 5px;border-radius:4px;margin-left:4px">🔄 auto</span>':'';
+    var delBtn = c._auto?'':('<button class="item-del" data-id="'+c.id+'" onclick="delContaBtn(this)" style="flex-shrink:0">&#x2715;</button>');
+    return '<div class="conta-card '+status+'">'+
+      '<div class="conta-ic '+status+'">📅</div>'+
+      '<div class="conta-info">'+
+      '<div class="conta-nome">'+c.nome+autoTag+'</div>'+
+      '<div class="conta-meta">'+(c.obs||'')+'</div>'+
+      '</div>'+
+      '<div class="conta-right">'+
+      '<div class="conta-valor">'+fmt(c.valor)+'</div>'+
+      '<span class="conta-badge badge-'+status+'">'+badge+'</span>'+
+      '</div>'+
+      delBtn+'</div>';
   }).join('');
-
-  // agendar notificações
-  agendarNotificacoes(comDias);
 }
 
-//============================================
-// NOTIFICAÇÕES
-//============================================
+
 function renderNotifBanner(){
   const el=document.getElementById('notifBannerEl');
   if(!el)return;
@@ -2678,22 +2833,86 @@ async function renderRelatorio(){
 }
 
 async function exportarRelatorio(){
-  const cache=window._cache;if(!cache)return;
-  const renda=_rF+_rC;
-  const t={fd:cache.fabio_diario,fp:cache.fabio_pessoal,cd:cache.camila_diario,cp:cache.camila_pessoal,dom:cache.domestico,laz:cache.lazer,inv:cache.investimento,emerg:cache.emergencia,dogs:cache.dogs};
-  const s=k=>t[k].reduce((a,g)=>a+g.valor,0);
-  const total=Object.keys(t).reduce((a,k)=>a+s(k),0);
+  var cache = window._cache; if(!cache) return;
+  var renda = _rF+_rC;
+  var t = {
+    fd:cache.fabio_diario||[], fp:cache.fabio_pessoal||[],
+    cd:cache.camila_diario||[], cp:cache.camila_pessoal||[],
+    dom:cache.domestico||[], laz:cache.lazer||[],
+    inv:cache.investimento||[], emerg:cache.emergencia||[], dogs:cache.dogs||[]
+  };
+  var s = function(k){return t[k].reduce(function(a,g){return a+g.valor;},0);};
+  var total = Object.keys(t).reduce(function(a,k){return a+s(k);},0);
   var linha = '='.repeat(35);
-  var txt = 'RELATORIO - '+MESES[mes].toUpperCase()+' '+ano+'\n'+linha+'\n\n';
-  txt += 'RECEITAS\n  Fabio Padote: '+fmt(_rF)+'\n  Camila Pamela: '+fmt(_rC)+'\n  Total: '+fmt(renda)+'\n\n';
-  txt += 'GASTOS\n  Fabio diario: '+fmt(s('fd'))+'\n  Fabio pessoal: '+fmt(s('fp'))+'\n  Camila diario: '+fmt(s('cd'))+'\n  Camila pessoal: '+fmt(s('cp'))+'\n  Domestico: '+fmt(s('dom'))+'\n  Lazer: '+fmt(s('laz'))+'\n  Investimentos: '+fmt(s('inv'))+'\n  Emergencia: '+fmt(s('emerg'))+'\n  Dogs: '+fmt(s('dogs'))+'\n';
-  txt += linha+'\n  TOTAL: '+fmt(total)+'\n\nSALDO: '+fmt(renda-total)+'\n% Investido: '+(renda>0?(s('inv')/renda*100).toFixed(1):0)+'%\n\nGerado - App Nos Dois';
-  try{await navigator.clipboard.writeText(txt);}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
-  alert('✅ Relatório copiado! Cole no WhatsApp ou e-mail.');
+  var txt = 'RELATORIO - '+MESES[mes].toUpperCase()+'/'+ano+'\n'+linha+'\n\n';
+  txt += 'RECEITAS\n  Fabio: '+fmt(_rF)+'\n  Camila: '+fmt(_rC)+'\n  Total: '+fmt(renda)+'\n\n';
+  txt += 'GASTOS\n  Fabio diario: '+fmt(s('fd'))+'\n  Fabio pessoal: '+fmt(s('fp'))+'\n';
+  txt += '  Camila diario: '+fmt(s('cd'))+'\n  Camila pessoal: '+fmt(s('cp'))+'\n';
+  txt += '  Domestico: '+fmt(s('dom'))+'\n  Lazer: '+fmt(s('laz'))+'\n';
+  txt += '  Investimentos: '+fmt(s('inv'))+'\n  Emergencia: '+fmt(s('emerg'))+'\n  Dogs: '+fmt(s('dogs'))+'\n';
+  txt += linha+'\n  TOTAL: '+fmt(total)+'\n\nSALDO: '+fmt(renda-total)+'\n';
+  txt += 'Gerado - App Nos Dois';
+  
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert('Relatorio copiado! Cole em qualquer lugar para salvar.');
+  }catch(e){
+    var ta=document.createElement('textarea');
+    ta.value=txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Relatorio copiado!');
+  }
 }
 
-// MURAL
-const MURAL_KEY='nd2_mural_notas';
+async function imprimirRelatorio(){
+  // Generate printable version
+  var cache = window._cache; if(!cache) return;
+  var renda = _rF+_rC;
+  var t = {
+    fd:cache.fabio_diario||[], fp:cache.fabio_pessoal||[],
+    cd:cache.camila_diario||[], cp:cache.camila_pessoal||[],
+    dom:cache.domestico||[], laz:cache.lazer||[],
+    inv:cache.investimento||[], emerg:cache.emergencia||[], dogs:cache.dogs||[]
+  };
+  var s = function(k){return t[k].reduce(function(a,g){return a+g.valor;},0);};
+  var total = Object.keys(t).reduce(function(a,k){return a+s(k);},0);
+  
+  var win = window.open('','_blank');
+  win.document.write('<html><head><title>Relatorio '+MESES[mes]+'/'+ano+'</title>');
+  win.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto;}');
+  win.document.write('h1{color:#2a7d4f;border-bottom:2px solid #2a7d4f;padding-bottom:8px;}');
+  win.document.write('h2{color:#444;font-size:1rem;margin-top:16px;}');
+  win.document.write('.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;}');
+  win.document.write('.total{font-weight:bold;border-top:2px solid #444;margin-top:4px;}');
+  win.document.write('.positivo{color:#2a7d4f;} .negativo{color:#dc2626;}');
+  win.document.write('</style></head><body>');
+  win.document.write('<h1>Relatorio Financeiro — '+MESES[mes]+'/'+ano+'</h1>');
+  win.document.write('<h2>RECEITAS</h2>');
+  win.document.write('<div class="row"><span>Fabio Padote</span><span>'+fmt(_rF)+'</span></div>');
+  win.document.write('<div class="row"><span>Camila Pamela</span><span>'+fmt(_rC)+'</span></div>');
+  win.document.write('<div class="row total"><span>Total</span><span>'+fmt(renda)+'</span></div>');
+  win.document.write('<h2>GASTOS</h2>');
+  var cats = {
+    'Fabio diario':s('fd'),'Fabio pessoal':s('fp'),
+    'Camila diario':s('cd'),'Camila pessoal':s('cp'),
+    'Domestico':s('dom'),'Lazer':s('laz'),
+    'Investimentos':s('inv'),'Emergencia':s('emerg'),'Dogs':s('dogs')
+  };
+  Object.keys(cats).forEach(function(k){
+    if(cats[k]>0) win.document.write('<div class="row"><span>'+k+'</span><span>'+fmt(cats[k])+'</span></div>');
+  });
+  win.document.write('<div class="row total"><span>Total Gastos</span><span>'+fmt(total)+'</span></div>');
+  var saldo = renda-total;
+  win.document.write('<h2>SALDO</h2>');
+  win.document.write('<div class="row total '+(saldo>=0?'positivo':'negativo')+'"><span>Saldo do mes</span><span>'+fmt(saldo)+'</span></div>');
+  win.document.write('<p style="color:#999;font-size:.8rem;margin-top:30px">Gerado pelo App Nos Dois — '+new Date().toLocaleDateString('pt-BR')+'</p>');
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 500);
+}
+
+
 async function enviarNota(){
   const msg=document.getElementById('muralMsg').value.trim();
   const quem=document.getElementById('muralQuem').value;
