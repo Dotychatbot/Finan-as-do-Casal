@@ -980,10 +980,37 @@ function logar(){
       </div>
       <div><label>Saldo atual (R$)</label><input type="number" id="ck-saldo" placeholder="0,00" min="0" step="0.01"/></div>
       <div><label>Alerta saldo baixo (R$)</label><input type="number" id="ck-alerta" placeholder="Ex: 100"/></div>
+      <div><label>Limite crédito (R$)</label><input type="number" id="ck-limite" placeholder="Ex: 3000 (só p/ crédito)"/></div>
+      <div><label>Dia venc. fatura</label><input type="number" id="ck-venc" placeholder="Ex: 15" min="1" max="31"/></div>
       <div class="full"><button class="btn-add" style="background:var(--casal)" onclick="addCarteira()">+ Adicionar Conta/Cartao</button></div>
     </div>
   </div>
 
+  <!-- TRANSFERÊNCIA ENTRE CONTAS -->
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--invest)"></span>Transferência entre contas</div>
+    <div class="fields">
+      <div><label>De</label><select id="transf-de"></select></div>
+      <div><label>Para</label><select id="transf-para"></select></div>
+      <div><label>Valor (R$)</label><input type="number" id="transf-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div><label>Descrição</label><input type="text" id="transf-desc" placeholder="Ex: Pagar fatura"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--invest)" onclick="fazerTransferencia()">↔️ Transferir</button></div>
+    </div>
+  </div>
+
+  <!-- PAGAR FATURA -->
+  <div class="form-box" style="margin-top:4px">
+    <div class="form-tit"><span class="bar" style="background:var(--emerg)"></span>Pagar fatura de crédito</div>
+    <div class="fields">
+      <div><label>Cartão crédito</label><select id="fatura-cartao"></select></div>
+      <div><label>Pagar com</label><select id="fatura-conta"></select></div>
+      <div><label>Valor a pagar (R$)</label><input type="number" id="fatura-val" placeholder="0,00" min="0" step="0.01"/></div>
+      <div class="full"><button class="btn-add" style="background:var(--emerg)" onclick="pagarFatura()">💳 Pagar Fatura</button></div>
+    </div>
+    <div id="fatura-resumo" style="margin-top:10px"></div>
+  </div>
+
+  <!-- HISTORICO -->
   <div class="form-box" style="margin-top:4px">
     <div class="form-tit"><span class="bar" style="background:var(--casal)"></span>Historico por cartao</div>
     <div style="margin-bottom:10px">
@@ -1678,6 +1705,12 @@ async function add(tipo){
   const dados=await carregar(tipo);
   dados.push(item);
   await salvar(tipo,dados);
+  // Auto debit from carteira if selected
+  if(item.carteira){
+    var isPagCredit = item.pag === 'credito';
+    await debitarGastoDaCarteira(item.carteira, item.valor, item.desc, isPagCredit);
+  }
+
   [ids[0],ids[1],ids[5]].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const dataEl=document.getElementById(ids[4]);if(dataEl)dataEl.value=hoje();
   renderAll();
@@ -2554,23 +2587,70 @@ async function renderAll(){
 const CAT_CONTA_ICONS={financiamento:'🏍️',casa:'🏠',agua:'💧',luz:'⚡',internet:'📶',gas:'🔥',cartao:'💳',aluguel:'🏡',saude:'💊',outros:'📦'};
 
 async function addConta(){
-  const nome=document.getElementById('cv-nome').value.trim();
-  const valor=parseFloat(document.getElementById('cv-valor').value)||0;
-  const dia=parseInt(document.getElementById('cv-dia').value)||0;
-  const cat=document.getElementById('cv-cat').value;
-  const quem=document.getElementById('cv-quem').value;
-  const obs=document.getElementById('cv-obs').value.trim();
-  if(!nome||!valor||!dia||dia<1||dia>31){alert('Preencha nome, valor e dia de vencimento!');return;}
-  const raw=await store.get('nd2_contas')||'[]';
-  const contas=JSON.parse(raw);
-  contas.push({id:Date.now(),nome,valor,dia,cat,quem,obs,ativa:true});
-  await store.set('nd2_contas',JSON.stringify(contas));
-  document.getElementById('cv-nome').value='';
-  document.getElementById('cv-valor').value='';
-  document.getElementById('cv-dia').value='';
-  document.getElementById('cv-obs').value='';
+  var nome = document.getElementById('cv-nome').value.trim();
+  var val = parseFloat(document.getElementById('cv-val').value)||0;
+  var dia = parseInt(document.getElementById('cv-dia').value)||1;
+  var cat = document.getElementById('cv-cat').value;
+  var obs = document.getElementById('cv-obs').value.trim();
+  var recorrente = document.getElementById('cv-recorrente').value;
+  var dequem = document.getElementById('cv-dequem').value;
+  var parcelas = parseInt(document.getElementById('cv-parcelas').value)||0;
+
+  if(!nome||!val){alert('Preencha nome e valor!');return;}
+
+  var contas = JSON.parse(await store.get(chaveG('contas'))||'[]');
+  var novaConta = {
+    id: Date.now(),
+    nome: nome,
+    valor: val,
+    dia: dia,
+    cat: cat,
+    obs: obs,
+    recorrente: recorrente,
+    dequem: dequem,
+    parcelas: parcelas,
+    parcelaAtual: 1,
+    ativa: true
+  };
+  contas.push(novaConta);
+  await store.set(chaveG('contas'), JSON.stringify(contas));
+
+  // If recorrente, also add to gastos recorrentes
+  if(recorrente !== 'nao'){
+    var recs = JSON.parse(await store.get(chaveG('recorrentes'))||'[]');
+    var secao = dequem==='conjunto'||dequem==='casal' ? 'domestico' :
+                dequem==='fabio' ? 'fabio_pessoal' : 'camila_pessoal';
+    recs.push({
+      id: Date.now()+1,
+      desc: nome,
+      val: val,
+      dia: dia,
+      cat: cat,
+      secao: secao,
+      meses: parcelas||0,
+      inicio: mes+'/'+ano,
+      obs: obs,
+      _fromConta: true
+    });
+    await store.set(chaveG('recorrentes'), JSON.stringify(recs));
+  }
+
+  // Clear form
+  ['cv-nome','cv-val','cv-dia','cv-obs','cv-parcelas'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
   await renderContas();
+  await renderRecorrentes();
 }
+
+function toggleRecorrenteFields(){
+  var val = document.getElementById('cv-recorrente').value;
+  var parcel = document.getElementById('cv-parcelas-wrap');
+  var dequem = document.getElementById('cv-dequem-wrap');
+  if(parcel) parcel.style.display = val==='parcelado'?'block':'none';
+  if(dequem) dequem.style.display = val==='nao'?'none':'block';
+}
+
 
 function delContaBtn(btn){
   delConta(btn.dataset.id);
@@ -2962,18 +3042,24 @@ async function addFonte(pessoa){
   var desc = document.getElementById(p+'-desc').value.trim();
   var val = parseFloat(document.getElementById(p+'-val').value)||0;
   var tipo = document.getElementById(p+'-tipo').value;
+  var carteiraId = parseInt(document.getElementById(p+'-carteira').value)||0;
   if(!desc||!val){alert('Preencha descricao e valor!');return;}
   var fontes = await carregarFontes(pessoa);
-  // Fixed fontes have no mes/ano - they appear every month automatically
-  // Variable fontes are tagged with current month
-  var novaFonte = {id:Date.now(), desc:desc, val:val, tipo:tipo};
+  var novaFonte = {id:Date.now(), desc:desc, val:val, tipo:tipo, carteira:carteiraId};
   if(tipo==='variavel'){ novaFonte.mes=mes; novaFonte.ano=ano; }
   fontes.push(novaFonte);
   await salvarFontes(pessoa, fontes);
+
+  // Credit in carteira automatically
+  if(carteiraId && tipo==='variavel'){
+    await creditarRendaNaCarteira(carteiraId, val, desc+' ('+pessoa+')');
+  }
+
   document.getElementById(p+'-desc').value='';
   document.getElementById(p+'-val').value='';
   await renderFontes();
   await renderAll();
+  await renderCarteiras();
 }
 
 
@@ -3088,6 +3174,21 @@ async function renderFontes(){
       '<div style="height:100%;border-radius:99px;background:'+barCor+';width:'+pct+'%"></div></div></div>'+
       metaHtml+'</div>';
   }
+
+  // Populate carteira selects in fontes form
+  var carteiras = await carregarCarteiras();
+  ['frf-carteira','frc-carteira'].forEach(function(selId){
+    var sel = document.getElementById(selId);
+    if(!sel) return;
+    var curr = sel.value;
+    sel.innerHTML = '<option value="">Nenhuma</option>';
+    carteiras.filter(function(c){return c.tipo!=='credito';}).forEach(function(c){
+      var opt=document.createElement('option');
+      opt.value=c.id; opt.textContent=c.icon+' '+c.nome;
+      sel.appendChild(opt);
+    });
+    if(curr) sel.value=curr;
+  });
 
   // Render lists
   var lf = document.getElementById('lista-fontes-fabio');
@@ -3269,23 +3370,35 @@ async function init(){
 
 // Auto mural summary at month start
 async function verificarResumoMural(){
+  var hoje_dt = new Date();
+  var ultimoDia = new Date(hoje_dt.getFullYear(), hoje_dt.getMonth()+1, 0).getDate();
   var chaveVisto = 'nd2_mural_resumo_'+ano+'_'+mes;
   if(localStorage.getItem(chaveVisto)) return;
-  // Only generate if we have data from last month
-  var mesPrev = mes===0?11:mes-1;
-  var anoPrev = mes===0?ano-1:ano;
-  var prevKey = 'nd2_'+anoPrev+'_'+mesPrev+'_domestico';
-  var prevData = localStorage.getItem(prevKey);
-  if(!prevData) return;
-  // Generate summary message
+
+  // Generate on last 2 days of month OR first day of new month
+  var diaHoje = hoje_dt.getDate();
+  var isUltimoDia = diaHoje >= ultimoDia-1;
+  var isPrimeiroDia = diaHoje === 1;
+  if(!isUltimoDia && !isPrimeiroDia) return;
+
+  var cache = window._cache || {};
+  var dom = cache['domestico']||[];
+  var totalDom = dom.reduce(function(a,g){return a+g.valor;},0);
+  var totalFD = (cache['fabio_diario']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var totalFP = (cache['fabio_pessoal']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var totalCD = (cache['camila_diario']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var totalCP = (cache['camila_pessoal']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var totalInv = (cache['investimento']||[]).reduce(function(a,g){return a+g.valor;},0);
+  var totalGastos = totalFD+totalFP+totalCD+totalCP+totalDom;
+  var saldo = _rF+_rC-totalGastos;
   var meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var msg = 'Resumo automatico de '+meses[mesPrev]+'/'+anoPrev+': ';
-  try {
-    var dom = JSON.parse(prevData);
-    var totalDom = dom.reduce(function(a,g){return a+g.valor;},0);
-    msg += 'Domestico total: '+fmt(totalDom)+'. Novo mes comecou - bora manter o foco! 💪';
-  } catch(e) { return; }
-  // Add to mural
+
+  var msg = '📊 FECHAMENTO '+meses[mes].toUpperCase()+'/'+ano+' | ';
+  msg += 'Renda: '+fmt(_rF+_rC)+' | ';
+  msg += 'Gastos: '+fmt(totalGastos)+' | ';
+  msg += 'Investido: '+fmt(totalInv)+' | ';
+  msg += 'Saldo: '+(saldo>=0?'✅ ':'⚠️ ')+fmt(saldo);
+
   var notas = [];
   try { notas = JSON.parse(localStorage.getItem(MURAL_KEY)||'[]'); } catch(e){}
   notas.unshift({
@@ -3298,13 +3411,9 @@ async function verificarResumoMural(){
   });
   await store.set(MURAL_KEY, JSON.stringify(notas));
   localStorage.setItem(chaveVisto, '1');
+  fbSave(chaveVisto, '1');
 }
 
-
-// CARTEIRAS & CONTAS
-var CARTEIRAS_KEY = 'nd2_g_carteiras';
-var TIPOS_CARTEIRA = {conta:'Conta Corrente',poupanca:'Poupanca',credito:'Credito',debito:'Debito',digital:'Digital',investimento:'Investimento'};
-var DONOS_CK = {casal:'Casal',fabio:'Fabio',camila:'Camila'};
 
 async function carregarCarteiras(){
   var r = await store.get(CARTEIRAS_KEY);
@@ -3321,9 +3430,11 @@ async function addCarteira(){
   var dono = document.getElementById('ck-dono').value;
   var saldo = parseFloat(document.getElementById('ck-saldo').value)||0;
   var alerta = parseFloat(document.getElementById('ck-alerta').value)||0;
+  var limite = parseFloat(document.getElementById('ck-limite').value)||0;
+  var venc = parseInt(document.getElementById('ck-venc').value)||0;
   if(!nome){alert('Digite o nome da conta!');return;}
   var carteiras = await carregarCarteiras();
-  carteiras.push({id:Date.now(),nome:nome,icon:icon,tipo:tipo,dono:dono,saldo:saldo,alerta:alerta});
+  carteiras.push({id:Date.now(),nome:nome,icon:icon,tipo:tipo,dono:dono,saldo:saldo,alerta:alerta,limite:limite,venc:venc,fatura:0});
   await salvarCarteiras(carteiras);
   document.getElementById('ck-nome').value='';
   document.getElementById('ck-icon').value='';
@@ -3412,31 +3523,107 @@ async function renderCarteiras(){
     }).join('');
   }
 
+  // Populate transfer and fatura selects
+  var transferDe = document.getElementById('transf-de');
+  var transferPara = document.getElementById('transf-para');
+  var faturaCt = document.getElementById('fatura-cartao');
+  var faturaConta = document.getElementById('fatura-conta');
+
+  [transferDe, transferPara].forEach(function(sel){
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Selecione...</option>';
+    carteiras.forEach(function(c){
+      var opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.icon+' '+c.nome;
+      sel.appendChild(opt);
+    });
+  });
+
+  if(faturaCt){
+    faturaCt.innerHTML = '<option value="">Selecione cartao...</option>';
+    carteiras.filter(function(c){return c.tipo==='credito';}).forEach(function(c){
+      var opt=document.createElement('option');
+      opt.value=c.id; opt.textContent=c.icon+' '+c.nome+' (fatura: '+fmt(c.fatura||0)+')';
+      faturaCt.appendChild(opt);
+    });
+  }
+  if(faturaConta){
+    faturaConta.innerHTML = '<option value="">Selecione conta...</option>';
+    carteiras.filter(function(c){return c.tipo!=='credito';}).forEach(function(c){
+      var opt=document.createElement('option');
+      opt.value=c.id; opt.textContent=c.icon+' '+c.nome+' (saldo: '+fmt(c.saldo||0)+')';
+      faturaConta.appendChild(opt);
+    });
+  }
+
+  // Fatura resumo
+  var faturaResumo = document.getElementById('fatura-resumo');
+  if(faturaResumo){
+    var cartCredito = carteiras.filter(function(c){return c.tipo==='credito'&&(c.fatura||0)>0;});
+    faturaResumo.innerHTML = cartCredito.map(function(c){
+      var diasVenc = c.venc ? diasParaVencer(c.venc) : null;
+      var alertVenc = diasVenc!==null&&diasVenc<=3?'<span style="color:var(--emerg);font-weight:700"> ⚠️ Vence em '+diasVenc+'d!</span>':'';
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.8rem">'+
+        '<span>'+c.icon+' '+c.nome+alertVenc+'</span>'+
+        '<span style="color:var(--emerg);font-family:DM Mono,monospace">'+fmt(c.fatura||0)+'</span></div>';
+    }).join('')||'<div style="font-size:.78rem;color:var(--muted)">Nenhuma fatura em aberto ✅</div>';
+  }
+
   // Render cards
   var DONO_COLORS = {casal:'var(--casal)',fabio:'var(--fabio)',camila:'var(--camila)'};
   if(!carteiras.length){
     grid.innerHTML='<div class="vazio" style="grid-column:1/-1">Nenhuma conta cadastrada. Adicione abaixo! 💳</div>';
     return;
   }
+
+  // Check fatura vencimento alerts
+  var fatAlerts = carteiras.filter(function(c){
+    return c.tipo==='credito' && c.venc && (c.fatura||0)>0 && diasParaVencer(c.venc)<=3;
+  });
+  if(alertasEl && fatAlerts.length){
+    fatAlerts.forEach(function(c){
+      alertasEl.innerHTML += '<div class="alerta-banner" style="margin-bottom:10px"><div class="ab-icon">💳</div>'+
+        '<div><h4>Fatura '+c.nome+' vence em '+diasParaVencer(c.venc)+'d!</h4>'+
+        '<p>Valor da fatura: '+fmt(c.fatura||0)+'</p></div></div>';
+    });
+  }
+
   grid.innerHTML = carteiras.map(function(c){
     var cor = DONO_COLORS[c.dono]||'var(--casal)';
-    var gastos = gastosPorCarteira[c.id]||0;
-    var fatura = faturasPorCarteira[c.id]||0;
-    var isAlerta = c.alerta>0&&c.saldo<=c.alerta;
+    var gastosMes = gastosPorCarteira[c.id]||0;
+    var fatura = c.fatura||0;
+    var isAlerta = c.alerta>0&&(c.saldo||0)<=c.alerta;
+    var limiteHtml = '';
+    if(c.tipo==='credito'&&c.limite>0){
+      var usado = fatura;
+      var pctLimite = Math.min(usado/c.limite*100,100).toFixed(0);
+      var limCor = pctLimite>80?'var(--emerg)':pctLimite>60?'var(--warn)':'var(--casal)';
+      limiteHtml = '<div style="margin-top:8px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:3px">'+
+        '<span>Limite usado</span><span>'+fmt(usado)+'/'+fmt(c.limite)+'</span></div>'+
+        '<div style="height:5px;background:var(--bg2);border-radius:99px;overflow:hidden">'+
+        '<div style="height:100%;border-radius:99px;background:'+limCor+';width:'+pctLimite+'%"></div></div></div>';
+    }
+    var diasVenc = c.venc&&fatura>0 ? diasParaVencer(c.venc) : null;
     return '<div class="carteira-card" style="border-color:'+cor+'40">'+
       '<button class="ck-del" onclick="delCarteira('+c.id+')" title="Remover">✕</button>'+
       '<div class="ck-header">'+
       '<div class="ck-icon" style="background:'+cor+'20">'+c.icon+'</div>'+
       '<div><div class="ck-nome">'+c.nome+'</div>'+
       '<div class="ck-tipo">'+(TIPOS_CARTEIRA[c.tipo]||c.tipo)+'</div></div></div>'+
-      '<div class="ck-saldo" style="color:'+cor+'">'+fmt(c.saldo)+'</div>'+
+      (c.tipo==='credito'?
+        '<div class="ck-saldo" style="color:var(--emerg)">Fatura: '+fmt(fatura)+'</div>'+
+        (c.limite>0?'<div style="font-size:.74rem;color:var(--muted)">Disponivel: '+fmt(c.limite-fatura)+'</div>':''):
+        '<div class="ck-saldo" style="color:'+cor+'">'+fmt(c.saldo||0)+'</div>'
+      )+
       '<div><span class="ck-dono" style="background:'+cor+'15;color:'+cor+'">'+
       (DONOS_CK[c.dono]||c.dono)+'</span></div>'+
-      (gastos>0?'<div class="ck-fatura">Gastos este mes: <strong>'+fmt(gastos)+'</strong></div>':'')+
-      (fatura>0?'<div class="ck-fatura" style="color:var(--emerg)">Fatura credito: <strong>'+fmt(fatura)+'</strong></div>':'')+
+      (gastosMes>0?'<div class="ck-fatura">Gastos este mes: <strong>'+fmt(gastosMes)+'</strong></div>':'')+
+      (diasVenc!==null?'<div class="ck-fatura" style="color:'+(diasVenc<=3?'var(--emerg)':'var(--warn)')+'">Fatura vence em '+diasVenc+'d</div>':'')+
+      limiteHtml+
       (isAlerta?'<div class="ck-alerta">⚠️ Saldo abaixo do limite!</div>':'')+
       '<div style="display:flex;gap:6px;margin-top:10px;align-items:center">'+
-      '<input type="number" placeholder="Novo saldo R$" id="ns-'+c.id+'" style="flex:1;font-size:.8rem;padding:6px 8px"/>'+
+      '<input type="number" placeholder="'+(c.tipo==='credito'?'Nova fatura R$':'Novo saldo R$')+'" id="ns-'+c.id+'" style="flex:1;font-size:.8rem;padding:6px 8px"/>'+
       '<button class="btn-sm" data-id="'+c.id+'" onclick="atualizarSaldoBtn(this)">Atualizar</button>'+
       '</div></div>';
   }).join('');
@@ -3448,28 +3635,143 @@ async function renderHistoricoCarteira(){
   if(!sel||!el) return;
   var carteiraId = parseInt(sel.value);
   if(!carteiraId){el.innerHTML='';return;}
+
+  // Get transactions from all storage
+  var historico = JSON.parse(localStorage.getItem('nd2_ck_hist_'+carteiraId)||'[]');
   var TIPOS_ALL = ['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal','domestico','lazer','emergencia','dogs','investimento'];
   var TIPO_LABELS = {fabio_diario:'Fabio diario',fabio_pessoal:'Fabio pessoal',camila_diario:'Camila diario',camila_pessoal:'Camila pessoal',domestico:'Domestico',lazer:'Lazer',emergencia:'Emergencia',dogs:'Dogs',investimento:'Investimento'};
-  var itens = [];
+  var gastos = [];
   TIPOS_ALL.forEach(function(tipo){
     var dados=[];
     try{dados=JSON.parse(localStorage.getItem(chave(tipo))||'[]');}catch(e){}
     dados.filter(function(g){return g.carteira===carteiraId;}).forEach(function(g){
-      itens.push(Object.assign({},g,{_tipo:tipo}));
+      gastos.push(Object.assign({},g,{_tipo:tipo,_dir:'saida'}));
     });
   });
-  itens.sort(function(a,b){return(b.data||'').localeCompare(a.data||'');});
-  if(!itens.length){el.innerHTML='<div class="vazio">Nenhum lancamento neste cartao este mes</div>';return;}
-  var total=itens.reduce(function(a,g){return a+g.valor;},0);
-  el.innerHTML='<div style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:8px">'+
-    itens.length+' lancamento(s) — Total: <strong style="color:var(--emerg)">'+fmt(total)+'</strong></div>'+
-    '<div class="lista">'+itens.map(function(g){
-      return '<div class="item"><div class="item-ic">💳</div>'+
-        '<div class="item-info"><div class="item-nome">'+g.desc+'</div>'+
-        '<div class="item-meta">'+fmtD(g.data)+' · '+(TIPO_LABELS[g._tipo]||'')+'</div></div>'+
-        '<div class="item-val casal">'+fmt(g.valor)+'</div></div>';
+
+  var todos = historico.concat(gastos);
+  todos.sort(function(a,b){return(b.data||b.date||'').localeCompare(a.data||a.date||'');});
+
+  if(!todos.length){el.innerHTML='<div class="vazio">Nenhum lancamento neste cartao</div>';return;}
+
+  var totalEntradas = historico.filter(function(h){return h._dir==='entrada';}).reduce(function(a,h){return a+h.valor;},0);
+  var totalSaidas = gastos.reduce(function(a,g){return a+g.valor;},0);
+
+  el.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:10px">'+
+    '<div class="mini-card" style="flex:1"><div class="lbl">Entradas</div><div class="val" style="color:var(--casal)">'+fmt(totalEntradas)+'</div></div>'+
+    '<div class="mini-card" style="flex:1"><div class="lbl">Saidas</div><div class="val" style="color:var(--emerg)">'+fmt(totalSaidas)+'</div></div>'+
+    '</div>'+
+    '<div class="lista">'+todos.map(function(g){
+      var isEntrada = g._dir==='entrada';
+      return '<div class="item">'+
+        '<div class="item-ic">'+(isEntrada?'📥':'💳')+'</div>'+
+        '<div class="item-info"><div class="item-nome">'+g.desc+(g.obs?' — '+g.obs:'')+'</div>'+
+        '<div class="item-meta">'+(g.data||g.date||'')+(g._tipo?' · '+(TIPO_LABELS[g._tipo]||g._tipo):'')+'</div></div>'+
+        '<div class="item-val" style="color:'+(isEntrada?'var(--casal)':'var(--emerg)')+'">'+(isEntrada?'+':'-')+fmt(g.valor)+'</div>'+
+        '</div>';
     }).join('')+'</div>';
 }
+
+// ══ TRANSFERÊNCIA ══
+async function fazerTransferencia(){
+  var deId = parseInt(document.getElementById('transf-de').value);
+  var paraId = parseInt(document.getElementById('transf-para').value);
+  var val = parseFloat(document.getElementById('transf-val').value)||0;
+  var desc = document.getElementById('transf-desc').value.trim()||'Transferencia';
+  if(!deId||!paraId||!val){alert('Preencha todos os campos!');return;}
+  if(deId===paraId){alert('Origem e destino nao podem ser iguais!');return;}
+
+  var carteiras = await carregarCarteiras();
+  carteiras = carteiras.map(function(c){
+    if(c.id===deId) c.saldo = (c.saldo||0) - val;
+    if(c.id===paraId) c.saldo = (c.saldo||0) + val;
+    return c;
+  });
+  await salvarCarteiras(carteiras);
+
+  // Register in history
+  var dataHoje = hoje();
+  var histDe = JSON.parse(localStorage.getItem('nd2_ck_hist_'+deId)||'[]');
+  histDe.push({id:Date.now(),desc:desc+' → saída',valor:val,data:dataHoje,_dir:'saida'});
+  localStorage.setItem('nd2_ck_hist_'+deId, JSON.stringify(histDe));
+  fbSave('nd2_ck_hist_'+deId, JSON.stringify(histDe));
+
+  var histPara = JSON.parse(localStorage.getItem('nd2_ck_hist_'+paraId)||'[]');
+  histPara.push({id:Date.now()+1,desc:desc+' → entrada',valor:val,data:dataHoje,_dir:'entrada'});
+  localStorage.setItem('nd2_ck_hist_'+paraId, JSON.stringify(histPara));
+  fbSave('nd2_ck_hist_'+paraId, JSON.stringify(histPara));
+
+  document.getElementById('transf-val').value='';
+  document.getElementById('transf-desc').value='';
+  await renderCarteiras();
+  alert('Transferencia realizada! '+fmt(val)+' transferido.');
+}
+
+// ══ PAGAR FATURA ══
+async function pagarFatura(){
+  var creditoId = parseInt(document.getElementById('fatura-cartao').value);
+  var contaId = parseInt(document.getElementById('fatura-conta').value);
+  var val = parseFloat(document.getElementById('fatura-val').value)||0;
+  if(!creditoId||!contaId||!val){alert('Preencha todos os campos!');return;}
+
+  var carteiras = await carregarCarteiras();
+  var credito = carteiras.find(function(c){return c.id===creditoId;});
+  var fatura = credito ? (credito.fatura||0) : 0;
+  var aPagar = val || fatura;
+
+  carteiras = carteiras.map(function(c){
+    if(c.id===contaId) c.saldo = (c.saldo||0) - aPagar;
+    if(c.id===creditoId) c.fatura = Math.max(0,(c.fatura||0) - aPagar);
+    return c;
+  });
+  await salvarCarteiras(carteiras);
+
+  var dataHoje = hoje();
+  var histConta = JSON.parse(localStorage.getItem('nd2_ck_hist_'+contaId)||'[]');
+  histConta.push({id:Date.now(),desc:'Pagamento fatura '+(credito?credito.nome:'cartao'),valor:aPagar,data:dataHoje,_dir:'saida'});
+  localStorage.setItem('nd2_ck_hist_'+contaId, JSON.stringify(histConta));
+  fbSave('nd2_ck_hist_'+contaId, JSON.stringify(histConta));
+
+  document.getElementById('fatura-val').value='';
+  await renderCarteiras();
+  alert('Fatura paga! '+fmt(aPagar)+' debitado da conta.');
+}
+
+// ══ CREDITAR RENDA NA CARTEIRA ══
+async function creditarRendaNaCarteira(carteiraId, valor, descricao){
+  if(!carteiraId||!valor) return;
+  var carteiras = await carregarCarteiras();
+  carteiras = carteiras.map(function(c){
+    if(c.id===carteiraId) c.saldo = (c.saldo||0) + valor;
+    return c;
+  });
+  await salvarCarteiras(carteiras);
+  var hist = JSON.parse(localStorage.getItem('nd2_ck_hist_'+carteiraId)||'[]');
+  hist.push({id:Date.now(),desc:descricao||'Renda recebida',valor:valor,data:hoje(),_dir:'entrada'});
+  localStorage.setItem('nd2_ck_hist_'+carteiraId, JSON.stringify(hist));
+  fbSave('nd2_ck_hist_'+carteiraId, JSON.stringify(hist));
+}
+
+// ══ DEBITAR GASTO DA CARTEIRA ══
+async function debitarGastoDaCarteira(carteiraId, valor, desc, isPagCredit){
+  if(!carteiraId||!valor) return;
+  var carteiras = await carregarCarteiras();
+  carteiras = carteiras.map(function(c){
+    if(c.id===carteiraId){
+      if(isPagCredit){
+        // Credit card - add to fatura, don't change saldo
+        c.fatura = (c.fatura||0) + valor;
+      } else {
+        // Debit - reduce saldo
+        c.saldo = (c.saldo||0) - valor;
+      }
+    }
+    return c;
+  });
+  await salvarCarteiras(carteiras);
+}
+
+
 </script>
 
 </body>
