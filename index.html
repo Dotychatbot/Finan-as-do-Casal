@@ -2055,8 +2055,23 @@ TIPOS.forEach(t=>filtros[t]='todos');
 function chave(t){return`nd2_${ano}_${mes}_${t}`;}
 function chaveG(k){return`nd2_g_${k}`;}
 function chaveM(k){return`nd2_m_${ano}_${mes}_${k}`;}
-async function carregar(t){const r=await store.get(chave(t));return r?JSON.parse(r):[];}
-async function salvar(t,d){await store.set(chave(t),JSON.stringify(d));}
+async function carregar(t){
+  var r = await store.get(chave(t));
+  return r ? JSON.parse(r) : [];
+}
+
+async function salvar(tipo, dados){
+  // Atualiza cache imediatamente para UI instantânea
+  if(typeof window._cache !== 'undefined') window._cache[tipo] = dados;
+  // Salva localmente (síncrono)
+  localStorage.setItem(chave(tipo), JSON.stringify(dados));
+  // Sincroniza Firebase em background
+  if(_syncEnabled && window._fbDB){
+    var obj = {}; obj[chave(tipo)] = JSON.stringify(dados);
+    window._fbDB.collection('casal').doc('v1').set(obj, {merge:true})
+      .catch(function(e){ console.warn('salvar FB err:',e.message); });
+  }
+}
 function hoje(){return new Date().toISOString().split('T')[0];}
 function fmt(v){return'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function fmtD(s){if(!s)return'';const[a,m,d]=s.split('-');return`${d}/${m}`;}
@@ -2150,31 +2165,85 @@ const CAMPOS={
   dogs:['dogs-desc','dogs-val','dogs-cat',null,'dogs-data','dogs-obs'],
 };
 async function add(tipo){
-  const ids=CAMPOS[tipo];
-  const g=id=>{const el=document.getElementById(id);return el?el.value:'';};
-  const desc=g(ids[0]).trim();
-  const valor=parseFloat(g(ids[1]));
-  if(!desc||isNaN(valor)||valor<=0){alert('Preencha descrição e valor!');return;}
-  const item={id:Date.now(),desc,valor};
-  if(ids[2])item.cat=g(ids[2]);
-  if(ids[3])item.quem=g(ids[3]);
-  if(ids[4])item.data=g(ids[4]);
-  if(ids[5])item.obs=g(ids[5]).trim();
-  if(tipo==='investimento'){item.tipo=g(ids[2]);item.quem=g(ids[3]);item.plat=g(ids[5]).trim();}
-  const dados=await carregar(tipo);
+  var ids = CAMPOS[tipo];
+  var g = function(id){ var el=document.getElementById(id); return el?el.value:''; };
+  var desc = g(ids[0]).trim();
+  var valor = parseFloat(g(ids[1]));
+  if(!desc || isNaN(valor) || valor<=0){
+    alert('Preencha descrição e valor!');
+    return;
+  }
+
+  var item = {id: Date.now(), desc: desc, valor: valor};
+
+  // Tipos com estrutura: [desc, val, cat, PAG, data, obs]
+  var tiposPessoais = ['fabio_diario','fabio_pessoal','camila_diario','camila_pessoal'];
+  // Domestico/lazer: [desc, val, cat, QUEM, pag, data, obs, carteira]
+
+  if(tiposPessoais.indexOf(tipo) > -1){
+    // pessoal/diário
+    item.cat  = g(ids[2])||'outros';
+    item.pag  = g(ids[3])||'debito';   // ids[3] = pag
+    item.data = g(ids[4])||hoje();      // ids[4] = data
+    item.obs  = g(ids[5]).trim();       // ids[5] = obs
+    item.quem = tipo.startsWith('fabio') ? 'fabio' : 'camila';
+  } else if(tipo === 'domestico'){
+    item.cat      = g(ids[2])||'outros';
+    item.quem     = g(ids[3])||'conjunto'; // ids[3] = quem
+    item.pag      = g(ids[4])||'debito';   // ids[4] = pag
+    item.data     = g(ids[5])||hoje();      // ids[5] = data
+    item.obs      = g(ids[6]).trim();       // ids[6] = obs
+    var cartId    = parseInt(g(ids[7]));
+    if(cartId) item.carteira = cartId;
+  } else if(tipo === 'lazer'){
+    item.cat  = g(ids[2])||'outros';
+    item.quem = g(ids[3])||'conjunto';
+    item.data = g(ids[4])||hoje();
+    item.obs  = g(ids[5]).trim();
+  } else if(tipo === 'investimento'){
+    item.tipo = g(ids[2]);
+    item.quem = g(ids[3]);
+    item.pag  = g(ids[4])||'debito';
+    item.data = g(ids[5])||hoje();
+    item.plat = g(ids[6]).trim();
+  } else {
+    // emergencia, dogs, outros
+    item.cat  = g(ids[2])||'outros';
+    item.pag  = g(ids[3])||'debito';
+    item.data = g(ids[4])||hoje();
+    item.obs  = g(ids[5]).trim();
+  }
+
+  var dados = await carregar(tipo);
   dados.push(item);
-  await salvar(tipo,dados);
-  // Auto debit from carteira if selected
+  await salvar(tipo, dados);
+
+  // Atualiza tela imediatamente
+  await renderAll();
+
+  // Auto debitar carteira se selecionado
   if(item.carteira){
     var isPagCredit = item.pag === 'credito';
     await debitarGastoDaCarteira(item.carteira, item.valor, item.desc, isPagCredit);
+    await renderCarteiras();
   }
-  // Notify partner
-  await notificarParceiro(tipo, item);
 
-  [ids[0],ids[1],ids[5]].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const dataEl=document.getElementById(ids[4]);if(dataEl)dataEl.value=hoje();
-  renderAll();
+  // Notificar parceiro
+  if(typeof notificarParceiro === 'function'){
+    notificarParceiro(tipo, item);
+  }
+
+  // Limpar campos
+  [ids[0], ids[1]].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  // Reset data para hoje
+  var dataId = tiposPessoais.indexOf(tipo)>-1 ? ids[4] :
+               tipo==='domestico' ? ids[5] :
+               tipo==='investimento' ? ids[5] : ids[4];
+  var dataEl = document.getElementById(dataId);
+  if(dataEl) dataEl.value = hoje();
 }
 function delItem(btn){
   var tipo = btn.dataset.tipo;
